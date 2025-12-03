@@ -1,0 +1,63 @@
+From f3d28e21ea111a0b7458439f417634bf459137f0 Mon Sep 17 00:00:00 2001
+From: Leo Shen <i@szclsya.me>
+Date: Thu, 30 Oct 2025 14:49:32 +0000
+Subject: [PATCH 2/2] qnx: add BUILDINFO
+
+- similar to Arch Linux's makepkg and pacman repro system
+---
+ abuild.in | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/abuild.in b/abuild.in
+index 2f13c5d..4b9a778 100644
+--- a/abuild.in
++++ b/abuild.in
+@@ -1086,6 +1086,7 @@ prepare_metafiles() {
+ 	local dir=${subpkgdir:-$pkgdir}
+ 	local pkg="$name-$pkgver-r$pkgrel.apk"
+ 	local pkginfo="$controldir"/.PKGINFO
++	local buildinfo="$controldir"/.BUILDINFO
+ 	local i size
+ 
+ 	[ ! -d "$dir" ] && die "Missing $dir"
+@@ -1207,7 +1208,36 @@ prepare_metafiles() {
+ 		echo "install_if = $(echo $install_if)" >> "$pkginfo"
+ 	fi
+ 
+-	local metafiles=".PKGINFO"
++        # QNX: BUILDINFO for dashboard and reproducible builds
++	cat >> "$buildinfo" <<-EOF
++		pkgname = $name
++		pkgver = $pkgver-r$pkgrel
++		pkgdesc = $pkgdesc
++		url = $url
++		builddate = $builddate
++		arch = ${subpkgarch:-$pkgarch}
++		origin = $pkgname
++		maintainer = $maintainer
++		packager = ${PACKAGER:-"Unknown"}
++		builddir = $builddir
++		startdir = $startdir
++	EOF
++	echo "apkbuild_sha512sum = $(sha512sum $APKBUILD | cut -d ' ' -f 1)" >> "$buildinfo"
++	# Use $url if vcs_url is not defined
++	echo "vcs_url = ${vcs_url:-$url}" >> "$buildinfo"
++	for i in $options; do
++		echo "option = $i" >> "$buildinfo"
++	done
++	local installed=$($APK list -I --manifest | sed 's: :=:g')
++	for i in $installed; do
++		local pkg=${i// /=}
++		case $pkg in
++			".makedepends-$pkgname="*) ;;
++			*) echo "installed = $pkg" >> "$buildinfo";;
++		esac
++	done
++
++	local metafiles=".PKGINFO .BUILDINFO"
+ 	for i in $install $triggers; do
+ 		local f=${i%=*}
+ 		local n=${f%.*}
+-- 
+2.51.0
+

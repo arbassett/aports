@@ -1,0 +1,48 @@
+# Alpine-Maintainer: Andy Postnikov <apostnikov@gmail.com>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=libyuv
+pkgver=0.0.1887.20251502
+pkgrel=2
+# using commit from libavif
+_commit=a6a2ec654b1be1166b376476a7555c89eca0c275
+pkgdesc="Library for YUV scaling"
+url="https://chromium.googlesource.com/libyuv/libyuv/"
+arch="all"
+license="BSD-3-Clause"
+depends="libjpeg-turbo libc++"
+makedepends="libjpeg-turbo-dev cmake grep ninja clang libc++-dev"
+checkdepends="gtest-dev"
+subpackages="$pkgname-static $pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://chromium.googlesource.com/libyuv/libyuv/+archive/$_commit.tar.gz
+    fix-loongarch64-build.patch"
+
+unpack() {
+    mkdir -p $srcdir/$pkgname-$pkgver
+    tar xzf $srcdir/$pkgname-$pkgver.tar.gz -C $srcdir/$pkgname-$pkgver
+}
+
+build() {
+    CC=clang \
+    CXX=clang++ \
+    cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DUNIT_TEST=1 \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    cmake --build build
+}
+
+check() {
+    local _pattern="*"
+    build/libyuv_unittest --gtest_filter=$_pattern
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+57798866721a9603f2b83b208aa0167ed83b344fcbdd9baf4524d68f52b758db5731f25efbd92bb3c51049f226c6b0bda4fc424658600aa8a73455e3a1ea5e05  libyuv-0.0.1887.20251502.tar.gz
+b505f6b8f6b191565f61c8d5b41a8f9c6653e0863c33f27628d08211d9a528f6a2f62dab951b707a12f6740a59931eda6f39a0ab4d2c1f1c06b369be22a10a14  fix-loongarch64-build.patch
+"
+

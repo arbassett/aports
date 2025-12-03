@@ -1,0 +1,54 @@
+# Alpine-Contributor: TBK <alpine@jjtc.eu>
+# Alpine-Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Alpine-Contributor: Pablo Correa Gomez <ablocorrea@hotmail.com>
+# Alpine-Maintainer: psykose <alice@ayaya.dev>
+# Maintainer: Yongxin Dai <yodai@qnx.com>
+pkgname=libportal
+pkgver=0.8.1 # need to figure out memfd_create on QNX
+pkgrel=0
+pkgdesc="GIO-style async APIs for most Flatpak portals"
+url="https://github.com/flatpak/libportal"
+arch="all"
+license="LGPL-3.0-or-later"
+depends="glib"
+depends_dev="glib-dev qnx-fd-notify-dev qnx-memstream-dev"
+makedepends="
+    $depends_dev
+    meson
+    gobject-introspection-dev
+    vala
+    gtk3-dev
+    "
+subpackages="
+    $pkgname-dev
+    $pkgname-gtk3:_gtk3
+    "
+source="
+    $pkgname-$pkgver.tar.gz::https://github.com/flatpak/libportal/archive/$pkgver.tar.gz
+"
+
+build() {
+    abuild-meson \
+        -Db_lto=false \
+        -Dbackend-gtk3=enabled \
+        -Ddocs=false \
+        . output
+    meson compile -C output
+}
+
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_gtk3() {
+    pkgdesc="$pkgdesc (GTK3 backend)"
+    # for gobject instrospection
+    depends="$pkgname=$pkgver-r$pkgrel gtk3"
+
+    amove usr/lib/libportal-gtk3*
+}
+
+sha512sums="
+ddeaf65c9e17c065320ce32064fdc34d196ad557d8f5358bd679ab7c7b8eab679916e21edbcfb42e22dc011e9bf60723509fea8339a77a3668fdbf2c55b6d2fd  libportal-0.8.1.tar.gz
+"

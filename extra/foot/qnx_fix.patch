@@ -1,0 +1,72 @@
+Common subdirectories: foot-orig/.builds and foot/.builds
+Common subdirectories: foot-orig/.forgejo and foot/.forgejo
+Common subdirectories: foot-orig/completions and foot/completions
+Common subdirectories: foot-orig/doc and foot/doc
+--- foot-orig/fdm.c	2025-07-23 06:28:13.000000000 +0000
++++ foot/fdm.c	2025-09-05 14:35:06.000000000 +0000
+@@ -30,6 +30,21 @@
+ }
+ #endif
+ 
++//QNX
++int epoll_pwait(int epfd, struct epoll_event *events,
++               int maxevents, int timeout,
++               const sigset_t *sigmask)
++{
++  sigset_t origmask;
++
++  sigprocmask(SIG_SETMASK, sigmask,& origmask);
++  int ready = epoll_wait(epfd, events, maxevents, timeout);
++  sigprocmask(SIG_SETMASK, &origmask, NULL);
++  return ready;
++}
++
++//END_QNX
++
+ struct fd_handler {
+     int fd;
+     int events;
+Common subdirectories: foot-orig/icons and foot/icons
+Only in foot: linux
+Only in foot: output
+Common subdirectories: foot-orig/pgo and foot/pgo
+Common subdirectories: foot-orig/scripts and foot/scripts
+--- foot-orig/selection.c	2025-07-23 06:28:13.000000000 +0000
++++ foot/selection.c	2025-09-05 14:35:06.000000000 +0000
+@@ -1,3 +1,4 @@
++#define timerfd_gettime timer_gettime
+ #include "selection.h"
+ 
+ #include <ctype.h>
+@@ -29,6 +30,8 @@
+ #include "vt.h"
+ #include "xmalloc.h"
+ 
++#include <time.h>
++
+ static const char *const mime_type_map[] = {
+     [DATA_OFFER_MIME_UNSET] = NULL,
+     [DATA_OFFER_MIME_TEXT_PLAIN] = "text/plain",
+Common subdirectories: foot-orig/subprojects and foot/subprojects
+Common subdirectories: foot-orig/tests and foot/tests
+Common subdirectories: foot-orig/themes and foot/themes
+Common subdirectories: foot-orig/unicode and foot/unicode
+--- foot-orig/util.h	2025-07-23 06:28:13.000000000 +0000
++++ foot/util.h	2025-09-05 14:35:06.000000000 +0000
+@@ -6,9 +6,12 @@
+ #include <threads.h>
+ 
+ #define ALEN(v) (sizeof(v) / sizeof((v)[0]))
+-#define min(x, y) ((x) < (y) ? (x) : (y))
+-#define max(x, y) ((x) > (y) ? (x) : (y))
+-
++#ifndef min
++    #define min(x, y) ((x) < (y) ? (x) : (y))
++#endif
++#ifndef max
++    #define max(x, y) ((x) > (y) ? (x) : (y))
++#endif
+ static inline bool
+ streq(const char *a, const char *b)
+ {
+Common subdirectories: foot-orig/utils and foot/utils

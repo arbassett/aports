@@ -1,0 +1,22 @@
+--- doctest-2.4.12.orig/doctest/doctest.h	2025-04-28 12:14:46.000000000 +0000
++++ doctest-2.4.12/doctest/doctest.h	2025-09-25 15:07:48.000000000 +0000
+@@ -495,7 +495,7 @@
+ // which case we don't want to forward declare stuff from std - for reference:
+ // https://github.com/doctest/doctest/issues/126
+ // https://github.com/doctest/doctest/issues/356
+-#if DOCTEST_CLANG
++#if DOCTEST_CLANG || defined(__QNX__)
+ #include <ciso646>
+ #endif // clang
+ 
+--- doctest-2.4.12.orig/doctest/parts/doctest_fwd.h	2025-04-28 12:14:46.000000000 +0000
++++ doctest-2.4.12/doctest/parts/doctest_fwd.h	2025-09-25 15:14:09.000000000 +0000
+@@ -492,7 +492,7 @@
+ // which case we don't want to forward declare stuff from std - for reference:
+ // https://github.com/doctest/doctest/issues/126
+ // https://github.com/doctest/doctest/issues/356
+-#if DOCTEST_CLANG
++#if DOCTEST_CLANG || defined(__QNX__)
+ #include <ciso646>
+ #endif // clang
+ 

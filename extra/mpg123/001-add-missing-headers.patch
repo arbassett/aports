@@ -1,0 +1,28 @@
+diff --git a/src/control_generic.c b/src/control_generic.c
+index 3604c4a..f1a7cb6 100644
+--- a/src/control_generic.c
++++ b/src/control_generic.c
+@@ -60,6 +60,10 @@ static int mode = MODE_STOPPED;
+ static int init = 0;
+ static int sendstat_disabled = FALSE;
+ 
++#ifdef __QNX__
++#include <unix.h>
++#endif
++
+ #include "common/debug.h"
+ 
+ void generic_sendmsg (const char *fmt, ...)
+diff --git a/src/libout123/modules/alsa.c b/src/libout123/modules/alsa.c
+index 11d172a..4863366 100644
+--- a/src/libout123/modules/alsa.c
++++ b/src/libout123/modules/alsa.c
+@@ -160,7 +160,7 @@ static int initialize_device(out123_handle *ao)
+ }
+ 
+ #ifndef DEBUG
+-static void error_ignorer(const char *file, int line, const char *function, int err, const char *fmt,...)
++static void error_ignorer(const char *file, int line, const char *function, unsigned int err, const char *fmt,...)
+ {
+ 	/* I can make ALSA silent. */
+ }

@@ -1,0 +1,29 @@
+diff --git a/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp b/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
+index 27e4b960..822a1bb4 100644
+--- a/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
++++ b/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
+@@ -39,9 +39,9 @@ std::unique_ptr<PlatformDisplaySurfaceless> PlatformDisplaySurfaceless::create()
+ 
+     RefPtr<GLDisplay> glDisplay;
+     if (GLContext::isExtensionSupported(extensions, "EGL_EXT_platform_base"))
+-        glDisplay = GLDisplay::create(eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr));
++        glDisplay = GLDisplay::create(eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, reinterpret_cast<void*>(EGL_DEFAULT_DISPLAY), nullptr));
+     else if (GLContext::isExtensionSupported(extensions, "EGL_KHR_platform_base"))
+-        glDisplay = GLDisplay::create(eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr));
++        glDisplay = GLDisplay::create(eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, reinterpret_cast<void*>(EGL_DEFAULT_DISPLAY), nullptr));
+ 
+     if (!glDisplay) {
+         WTFLogAlways("Could not create surfaceless EGL display: %s. Aborting...", GLContext::lastErrorString());
+diff --git a/Source/WebKit/UIProcess/gtk/DisplayWayland.cpp b/Source/WebKit/UIProcess/gtk/DisplayWayland.cpp
+index cbe012fb..c2f61278 100644
+--- a/Source/WebKit/UIProcess/gtk/DisplayWayland.cpp
++++ b/Source/WebKit/UIProcess/gtk/DisplayWayland.cpp
+@@ -77,7 +77,7 @@ bool Display::initializeGLDisplayWayland() const
+     if (!m_glDisplay && GLContext::isExtensionSupported(extensions, "EGL_EXT_platform_base"))
+         m_glDisplay = GLDisplay::create(eglGetPlatformDisplayEXT(EGL_PLATFORM_WAYLAND_EXT, wlDisplay, nullptr));
+     if (!m_glDisplay)
+-        m_glDisplay = GLDisplay::create(eglGetDisplay(wlDisplay));
++        m_glDisplay = GLDisplay::create(eglGetDisplay(reinterpret_cast<EGLNativeDisplayType>(wlDisplay)));
+ 
+     if (m_glDisplay) {
+         m_glDisplayOwned = true;

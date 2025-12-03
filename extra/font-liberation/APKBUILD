@@ -1,0 +1,55 @@
+# Alpine-Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=font-liberation
+_fontname=${pkgname#font-}
+pkgver=2.1.5
+pkgrel=0
+pkgdesc="Fonts to replace commonly used Microsoft Windows fonts"
+url="https://github.com/liberationfonts/liberation-fonts"
+license="OFL-1.1"
+arch="noarch"
+depends="fontconfig"
+provides="font-times"
+provider_priority=10
+options="!check"
+subpackages="ttf-liberation:_ttf_liberation:noarch"
+# added fontconfig configuration from:
+# https://github.com/bohoomil/fontconfig-ultimate/tree/master/fontconfig_patches/fonts-settings
+source="https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-$pkgver.tar.gz
+	30-$_fontname-mono.conf
+	30-$_fontname-sans.conf
+	30-$_fontname-serif.conf
+	45-$_fontname.conf
+	90-$_fontname.conf
+	"
+builddir="$srcdir/liberation-fonts-ttf-$pkgver"
+
+package() {
+	install -D -m644 ./*.ttf -t "$pkgdir"/usr/share/fonts/$_fontname/
+
+	mkdir -p "$pkgdir"/etc/fonts/conf.d
+
+	local i; for i in "$srcdir"/*.conf; do
+		install -D -m644 "$i" -t "$pkgdir"/etc/fonts/conf.avail/
+		ln -s ../conf.avail/${i##*/} "$pkgdir"/etc/fonts/conf.d/${i##*/}
+	done
+}
+
+# For backward compatibility with Alpine <3.16.
+_ttf_liberation() {
+	pkgdesc="Deprecated name for font-liberation and font-liberation-sans-narrow"
+	depends="$pkgname=$pkgver-r$pkgrel font-liberation-sans-narrow"
+
+	mkdir -p "$subpkgdir"
+}
+
+
+sha512sums="
+b9f178fae43c9214ba6de36c6da613fcf59bd98084058afaaa9151d00f2406942bc360430be0a8f35ea6b5529146eef371c7cf75bdd7910403d449254f943fed  liberation-fonts-ttf-2.1.5.tar.gz
+2816ed05e42e1301491a6ce51abd2b2f8dfde352124a43d480c3d4a6dfaf01729e2156694f646f3ea0a9bff91d315d5a21a9093cf203abfcb99db617840521fa  30-liberation-mono.conf
+fa61d058deb1a13dc23b1af27250983d1b351f5b3d6623bc3efdc962d0eafe31c8dc5a195f1d0c8ccd678dfd25d50f203b6087865e469f86115c6b0e9344356a  30-liberation-sans.conf
+aaa376b6daeb9399d6c72e75c66efffb6b0164cd287fcc169484e9e77e2e3eec9337a7ebcf9d039df74cf0ee60bf78c47dc9d7da765dd25a7ed86dc6ba8c0dfa  30-liberation-serif.conf
+06f98c849bb633314f8c3cac64be8c84c204381ef153c499483daac563eed3bf1ad5c8ae549e1006b73b34775e5c473a0ee9f4723ddf8b2e745b0a5cbd8692f0  45-liberation.conf
+13476a8036568cdd9ce0a24dcba87b7122af06908e05e97cb495445e1b32796c0e613b9d3e989fded2617a6712d1f51182168dee48505151f51868cfae15fdc4  90-liberation.conf
+"

@@ -1,0 +1,82 @@
+# Alpine-Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=pinentry
+pkgver=1.3.1
+pkgrel=2
+pkgdesc="Collection of simple PIN or passphrase entry dialogs which utilize the Assuan protocol"
+url="https://www.gnupg.org/aegypten2/"
+arch="all"
+license="GPL-2.0-or-later"
+install="$pkgname.post-install"
+depends="ncurses libgpg-error libassuan libiconv qnx-io-sock"
+makedepends="ncurses-dev libgpg-error-dev libassuan-dev libiconv-dev qnx-io-sock-dev"
+subpackages="$pkgname-doc $pkgname-tty"
+source="
+    https://gnupg.org/ftp/gcrypt/pinentry/pinentry-$pkgver.tar.bz2
+    qnx-stub-wcswidth.patch
+"
+
+prepare() {
+    default_prepare
+
+    # cp -ar "$builddir" "$builddir-libsecret"
+}
+
+build() {
+    _build \
+        --disable-libsecret \
+        --enable-pinentry-curses \
+        --enable-pinentry-tty
+
+    # Can re-enable when get get desktop
+    # cd "$builddir-libsecret"
+    # _build \
+    #     --enable-libsecret \
+    #     --enable-pinentry-curses \
+    #     --disable-pinentry-tty
+}
+
+_build() {
+    ./configure \
+        --build=$CBUILD \
+        --host=$CHOST \
+        --prefix=/usr \
+        --disable-pinentry-gtk2 \
+        --disable-pinentry-gnome3 \
+        --disable-pinentry-qt \
+        --disable-pinentry-emacs \
+        --disable-inside-emacs \
+        --enable-fallback-curses \
+        "$@"
+    make
+}
+
+check() {
+    make check
+}
+
+package() {
+    make DESTDIR="$pkgdir" install
+
+    # created by post install scripts so we can override with other UI versions
+    rm -f "$pkgdir"/usr/bin/pinentry
+}
+
+#_curses_ss() {
+#    pkgdesc="Curses-based PIN or pass-phrase entry dialog for GnuPG with Secret Service support"
+#
+#    install -D -m 755 "$builddir-libsecret"/curses/pinentry-curses \
+#        "$subpkgdir"/usr/bin/pinentry-curses-ss
+#}
+
+tty() {
+    pkgdesc="Minimal dumb-terminal PIN or pass-phrase entry dialog for GnuPG"
+
+    amove usr/bin/pinentry-tty
+}
+
+sha512sums="
+3b72034dc1792b1475acb6d605ff7c1bd7647a0f02d1b6bdcd475acdef24bc802f49e275055436c3271261c4b7a64168477a698aab812a145962146b2f67a0e2  pinentry-1.3.1.tar.bz2
+aefc1a45dac7242e94c2ec5853e4438eef9cc97f9d1f520e669213e3e06b69c4aafb756dd0a418a11c73436e34c166c37276d62ee921dd7be5ab2ac89ab40a4b  qnx-stub-wcswidth.patch
+"

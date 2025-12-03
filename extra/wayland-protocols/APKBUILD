@@ -1,0 +1,30 @@
+pkgname=wayland-protocols
+pkgver=1.45
+pkgrel=1
+pkgdesc="Protocols and protocol extensions complementing the Wayland core protocol"
+url="https://wayland.freedesktop.org"
+arch="noarch"
+license="MIT"
+provides="$pkgname-dev=$pkgver-r$pkgrel"
+makedepends="meson ninja pkgconf pkgconf-dev wayland-dev clang libc++-dev"
+source="https://gitlab.freedesktop.org/wayland/wayland-protocols/-/archive/$pkgver/wayland-protocols-$pkgver.tar.gz"
+
+build() {
+    CC="clang" \
+    CXX="clang++" \
+    abuild-meson -Dtests=true . build
+    ninja -C build
+}
+
+check() {
+    meson test --print-errorlogs -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+3c7a8370498a6ed1767bbe1ad23c97805c1cb524157d88a83ecc79caa511f3fc9ad74bf6124f84e2edeffd5d5d2895a0c68f5100d3ef62d38de44a8e55a12605  wayland-protocols-1.45.tar.gz
+"
+

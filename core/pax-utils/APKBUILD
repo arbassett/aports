@@ -1,0 +1,44 @@
+pkgname=pax-utils
+pkgver=1.3.8
+pkgrel=1
+pkgdesc="ELF utils that can check files for security relevant properties"
+url="https://wiki.gentoo.org/wiki/Hardened/PaX_Utilities"
+arch="all"
+makedepends="meson ninja"
+license="GPL-2.0-only"
+subpackages="$pkgname-doc"
+source="https://dev.gentoo.org/~sam/distfiles/app-misc/pax-utils/pax-utils-$pkgver.tar.xz
+    fix-qnx.patch
+    fix-recursive.patch
+"
+
+build() {
+
+    _extra_flags=""
+        if [[ $CBUILD = $CHOST ]]; then
+        # Compile natively
+        _extra_flags="-Dc_link_args=-lregex"
+    else
+        # Cross compiling
+        BUILD_ROOT=$CBUILDROOT $CBUILDROOT/system/bin/gen-meson-cross
+        _extra_flags="--cross-file=meson.cross"
+    fi
+
+    meson setup build \
+          -Dprefix=/usr \
+          $_extra_flags \
+          -Dlddtree_implementation=sh \
+          -Duse_seccomp=false \
+          -Duse_libcap=disabled
+    meson compile -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+sha512sums="
+0dde95f86802729d80b7b38af84dec636e973f6abc70600633edcb05d3d5f95c1b2861300ce478dd7f798c7a1e5eccb1011c06c53adba38e11a996b69d463656  pax-utils-1.3.8.tar.xz
+70a3d23751702b078aaa50e459e4247a0147628afdd857bc64d2938d4f334411b49be2d0de5ba6dfe093099444b3a05ac71099f936c3d8e4ab0f9655f0861d71  fix-qnx.patch
+e76db1a40e56da5fb60c6633a434a0b6361433a9b06cdd7a1260057fb8b3b6ae2565ce4635f38e56e8a57ee33cccee0ef24ef17b9c3bd18ddef0b85af1a2551f  fix-recursive.patch
+"

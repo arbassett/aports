@@ -1,0 +1,12 @@
+# This file contains a manually maintained order of building packages
+# Top to bottom, left to right. Each "section" should be on one line
+# Please also add description of each section when applicable
+
+# Libraries that doesn't depend on anything but core
+xxhash pcre2 libevent
+# Font rendering
+#gperf freetype fontconfig
+# Command line tools
+zsh rsync vim git tmux
+# GTK and friends
+#libpng pixman libev

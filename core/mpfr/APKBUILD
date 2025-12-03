@@ -1,0 +1,37 @@
+# Maintainer: Leo Shen <yishen@qnx.com>
+pkgname=mpfr
+pkgver=4.2.2
+pkgrel=1
+# strip p value, the patches are separate and are on https://www.mpfr.org/mpfr-current/
+_pkgver="${pkgver%_p*}"
+pkgdesc="multiple-precision floating-point library"
+url="https://www.mpfr.org/"
+arch="all"
+license="LGPL-3.0-or-later"
+depends="gmp"
+makedepends="gmp-dev texinfo automake libtool m4"
+subpackages="$pkgname-doc $pkgname-dev"
+source=(https://mirror.csclub.uwaterloo.ca/gnu/$pkgname/$pkgname-$_pkgver.tar.xz{,.sig})
+
+build() {
+    ./configure \
+        --build=$CBUILD \
+        --prefix=/usr \
+        --with-gmp=/usr \
+        --disable-thread-safe \
+        --enable-shared
+    make
+}
+
+check() {
+    cd "$builddir"
+    make check
+}
+
+package() {
+    make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+eb9e7f51b5385fb349cc4fba3a45ffdf0dd53be6dfc74932dc01258158a10514667960c530c47dd9dfc5aa18be2bd94859d80499844c5713710581e6ac6259a9  mpfr-4.2.2.tar.xz
+"

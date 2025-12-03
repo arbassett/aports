@@ -1,0 +1,11 @@
+--- geany-plugins-2.1/build/scope.m4.orig	2025-10-08 15:27:40.000000000 +0000
++++ geany-plugins-2.1/build//scope.m4	2025-10-08 15:27:47.000000000 +0000
+@@ -11,7 +11,7 @@
+              GP_CHECK_UTILSLIB_VTECOMPAT([Scope])
+ 
+              AC_CHECK_HEADERS([util.h pty.h libutil.h])
+-             PTY_LIBS="-lutil"])
++             PTY_LIBS=""])
+ 
+     AC_SUBST(PTY_LIBS)
+ 

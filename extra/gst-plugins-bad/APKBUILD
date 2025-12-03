@@ -1,0 +1,110 @@
+# Alpine-Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=gst-plugins-bad
+pkgver=1.26.8
+pkgrel=0
+pkgdesc="GStreamer streaming media framework bad plug-ins"
+url="https://gstreamer.freedesktop.org/"
+arch="all"
+license="GPL-2.0-or-later LGPL-2.0-or-later"
+options="!check"
+depends="
+    aom-libs
+    cairo
+    glib
+    gsm
+    gst-plugins-base
+    gstreamer
+    lcms2
+    libass
+    libbz2
+    libc++
+    libcrypto3
+    libcurl
+    libintl
+    libssl3
+    libSvtAv1Enc
+    libwebp
+    libwebpmux
+    libxml2
+    openjpeg
+    opus
+    orc
+    pango
+    qnx-io-sock
+    qnx-vulkan
+    wayland
+    "
+depends_dev="
+    gstreamer-dev
+    gst-plugins-base-dev
+    wayland-dev
+"
+makedepends="$depends_dev
+    aom-dev
+    bzip2-dev
+    curl-dev
+    clang
+    glib-dev
+    gobject-introspection-dev
+    gsm-dev
+    gtk3-dev
+    lcms2-dev
+    libass-dev
+    libc++-dev
+    libexif-dev
+    libwebp-dev
+    libxkbcommon-dev
+    meson
+    openexr-dev
+    openjpeg-dev
+    openssl-dev>3
+    opus-dev
+    orc-dev
+    pango-dev
+    svt-av1-dev
+    tiff-dev
+    vulkan-headers
+    wayland-protocols
+    qnx-screen-dev
+    qnx-vulkan
+    "
+subpackages="$pkgname-dbg $pkgname-lang $pkgname-dev"
+source="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-$pkgver.tar.xz
+        input.h
+    "
+ldpath="/usr/lib/gstreamer-1.0"
+
+build() {
+    # add the linux/input.h
+    mkdir gst-libs/linux
+    cp $srcdir/input.h gst-libs/linux
+
+    CC=clang \
+    CXX=clang++ \
+    LDFLAGS="-lsocket" \
+    CFLAGS="$CFLAGS -O2" \
+    CXXFLAGS="$CXXFLAGS -O2" \
+    CPPFLAGS="$CPPFLAGS -O2" \
+    abuild-meson \
+        -Db_lto=false \
+        -Dpackage-origin="www.qnx.com" \
+        -Dpackage-name="GStreamer bad plug-ins (QNX)" \
+        -Dintrospection=enabled \
+        -Dtests="$(want_check && echo enabled || echo disabled)" \
+        . output
+    meson compile -C output
+}
+
+check() {
+    meson test -C output --print-errorlogs
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+a537b1cc9dfddc78e6e1bc8e0b9418a1775287e67306774dc27871bd7e82e350ec1af8f6479b3cf9fb4edea31c94d327826e6f7f20fec8be675324b0669a1bbc  gst-plugins-bad-1.26.8.tar.xz
+f8da44d844cee2b21610f7bb83222910ecb7fad5620d461f88b264d52b0308ffe78b930c414c58766ce0fa440c4edae8156a7848237b50e6e4bbf0ddd0ed5767  input.h
+"

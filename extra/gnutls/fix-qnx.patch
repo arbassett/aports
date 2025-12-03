@@ -1,0 +1,111 @@
+diff --git a/gl/inet_ntop.c b/gl/inet_ntop.c
+index df3d951..4582d6d 100644
+--- a/gl/inet_ntop.c
++++ b/gl/inet_ntop.c
+@@ -55,7 +55,7 @@ const char *
+ rpl_inet_ntop (int af, const void *restrict src,
+                char *restrict dst, socklen_t cnt)
+ {
+-  return inet_ntop (af, src, dst, cnt);
++  return __inet_ntop (af, src, dst, cnt);
+ }
+ 
+ #else
+diff --git a/gl/inet_pton.c b/gl/inet_pton.c
+index 74d55c4..308426a 100644
+--- a/gl/inet_pton.c
++++ b/gl/inet_pton.c
+@@ -44,7 +44,7 @@
+ int
+ rpl_inet_pton (int af, const char *restrict src, void *restrict dst)
+ {
+-  return inet_pton (af, src, dst);
++  return __inet_pton (af, src, dst);
+ }
+ 
+ #else
+diff --git a/gl/stdlib.in.h b/gl/stdlib.in.h
+index f8e2a6c..ac22af0 100644
+--- a/gl/stdlib.in.h
++++ b/gl/stdlib.in.h
+@@ -130,6 +130,11 @@ struct random_data
+ # include <string>
+ #endif
+ 
++// getprogname defined here on QNX
++#if defined(__QNX__)
++#include <sys/process.h>
++#endif
++
+ _GL_INLINE_HEADER_BEGIN
+ #ifndef _GL_STDLIB_INLINE
+ # define _GL_STDLIB_INLINE _GL_INLINE
+diff --git a/src/gl/inet_ntop.c b/src/gl/inet_ntop.c
+index df3d951..4582d6d 100644
+--- a/src/gl/inet_ntop.c
++++ b/src/gl/inet_ntop.c
+@@ -55,7 +55,7 @@ const char *
+ rpl_inet_ntop (int af, const void *restrict src,
+                char *restrict dst, socklen_t cnt)
+ {
+-  return inet_ntop (af, src, dst, cnt);
++  return __inet_ntop (af, src, dst, cnt);
+ }
+ 
+ #else
+diff --git a/src/gl/inet_pton.c b/src/gl/inet_pton.c
+index 74d55c4..308426a 100644
+--- a/src/gl/inet_pton.c
++++ b/src/gl/inet_pton.c
+@@ -44,7 +44,7 @@
+ int
+ rpl_inet_pton (int af, const char *restrict src, void *restrict dst)
+ {
+-  return inet_pton (af, src, dst);
++  return __inet_pton (af, src, dst);
+ }
+ 
+ #else
+diff --git a/src/gl/stdlib.in.h b/src/gl/stdlib.in.h
+index f8e2a6c..ac22af0 100644
+--- a/src/gl/stdlib.in.h
++++ b/src/gl/stdlib.in.h
+@@ -130,6 +130,11 @@ struct random_data
+ # include <string>
+ #endif
+ 
++// getprogname defined here on QNX
++#if defined(__QNX__)
++#include <sys/process.h>
++#endif
++
+ _GL_INLINE_HEADER_BEGIN
+ #ifndef _GL_STDLIB_INLINE
+ # define _GL_STDLIB_INLINE _GL_INLINE
+diff --git a/src/gl/tests/endian.in.h b/src/gl/tests/endian.in.h
+index e81aa7d..ac32330 100644
+--- a/src/gl/tests/endian.in.h
++++ b/src/gl/tests/endian.in.h
+@@ -73,7 +73,7 @@ _GL_INLINE_HEADER_BEGIN
+ # define BYTE_ORDER LITTLE_ENDIAN
+ #endif
+ 
+-#if @HAVE_ENDIAN_H@ || @HAVE_SYS_ENDIAN_H@
++#if @HAVE_ENDIAN_H@ || @HAVE_SYS_ENDIAN_H@ || defined(__QNX__)
+ 
+ /* Make sure we don't have any system definitions.  */
+ # undef be16toh
+diff --git a/src/gl/tests/test-random.c b/src/gl/tests/test-random.c
+index 4a4e0af..cc63afa 100644
+--- a/src/gl/tests/test-random.c
++++ b/src/gl/tests/test-random.c
+@@ -21,7 +21,7 @@
+ #include "signature.h"
+ SIGNATURE_CHECK (srandom, void, (unsigned int));
+ SIGNATURE_CHECK (initstate, char *, (unsigned int, char *, size_t));
+-SIGNATURE_CHECK (setstate, char *, (char *));
++SIGNATURE_CHECK (setstate, char *, (const char *));
+ SIGNATURE_CHECK (random, long, (void));
+ 
+ #include <time.h>
+

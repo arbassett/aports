@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 824a27a..03b885d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,7 +8,7 @@ BINDIR?=$(PREFIX)/bin
+ MANDIR?=$(PREFIX)/share/man
+ PCDIR?=$(PREFIX)/share/pkgconfig
+ OUTDIR=.build
+-HOST_SCDOC=./scdoc
++HOST_SCDOC=scdoc
+ .DEFAULT_GOAL=all
+ 
+ OBJECTS=\

@@ -1,0 +1,86 @@
+# Alpine-Contributor: V.Krishn <vkrishn4@gmail.com>
+# Alpine-Contributor: Eivind Uggedal <eu@eju.no>
+# Alpine-Contributor: TBK <alpine@jjtc.eu>
+# Alpine-Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Felix Xing <fxing@qnx.com>
+
+pkgname=valkey
+pkgver=8.1.4
+pkgrel=0
+pkgdesc="Open source high-performance key/value datastore (fork of Redis)"
+url="https://valkey.io/"
+arch="all"
+license="BSD-3-Clause"
+pkgusers="valkey"
+pkggroups="valkey"
+depends="qnx-io-sock libssl3 libcrypto3"
+makedepends="openssl-dev qnx-io-sock-dev cmake ninja clang libc++-dev"
+install="
+    $pkgname.pre-install
+    $pkgname.post-install
+    "
+subpackages="
+    $pkgname-benchmark
+    $pkgname-cli
+    hiredis-dev
+    "
+source="https://github.com/valkey-io/valkey/archive/$pkgver/valkey-$pkgver.tar.gz
+    fix-IOV_MAX.patch
+    "
+
+build() {
+    # GCC has lots of unnecessary errors.....
+    cmake3.5 -B build -G Ninja \
+        -DCMAKE_INSTALL_PREFIX="/usr" \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DBUILD_MALLOC=libc \
+        -DBUILD_UNIT_TESTS=yes \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TLS=yes
+
+    ninja -C build -j4
+}
+
+check() {
+    # unit test only
+    cd "$builddir"/build
+    ./bin/valkey-unit-tests
+}
+
+package() {
+    sed 's|${DESTDIR}|${DESTDIR}/usr|' build/CreateSymlink.sh > build/CreateSymlink.sh
+    DESTDIR="$pkgdir" ninja -C build install
+
+    cd "$pkgdir"
+    rm -rf build
+    
+    # QNX bug, the user has been changed
+    install -d -m 750 -o valkey -g valkey \
+        etc/valkey \
+        etc/valkey/valkey.d \
+        var/lib/valkey \
+        var/lib/valkey/sentinel || true
+
+    install -D -m 640 -o root -g valkey "$builddir"/valkey.conf etc/valkey/valkey.conf || true
+    install -D -m 640 -o valkey -g valkey "$builddir"/sentinel.conf etc/valkey/sentinel.conf || true
+}
+
+benchmark() {
+    depends="qnx-io-sock libssl3 libcrypto3"
+    pkgdesc="Valkey benchmarking tool"
+
+    amove usr/bin/valkey-benchmark
+}
+
+cli() {
+    depends="qnx-io-sock libssl3 libcrypto3"
+    pkgdesc="Valkey CLI client"
+
+    amove usr/bin/valkey-cli
+}
+
+sha512sums="
+ee44a550a0868dd42ebe3b015bdc2940b00e2e2984b6870f287605399f52986ee87e957193097a07ab5da1a1194a2b7873ed1919a74c9212903f5748d722f5f0  valkey-8.1.4.tar.gz
+35e5c203e4e56c3466cf634c81c58dce2bf0cabf832e1cc48354db09cc813db2c4102ba780c5b17d94481631df4fbad681e6977d986b1a86330f2072d7037237  fix-IOV_MAX.patch
+"

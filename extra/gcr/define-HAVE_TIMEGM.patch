@@ -1,0 +1,22 @@
+From cedb1a6c063925af57f4a183870d32cac838dcd8 Mon Sep 17 00:00:00 2001
+From: Yongxin Dai <yodai@qnx.com>
+Date: Sat, 15 Nov 2025 15:00:13 -0500
+Subject: [PATCH] define HAVE_TIMEGM
+
+
+ 100.0% egg/
+diff --git a/egg/meson.build b/egg/meson.build
+index 6888a5c..8927e91 100644
+--- a/egg/meson.build
++++ b/egg/meson.build
+@@ -28,6 +28,7 @@ libegg = static_library('egg',
+   libegg_sources,
+   dependencies: libegg_deps,
+   include_directories: config_h_dir,
++  c_args: [ '-DHAVE_TIMEGM' ],
+ )
+ 
+ libegg_dep = declare_dependency(
+-- 
+2.51.2
+

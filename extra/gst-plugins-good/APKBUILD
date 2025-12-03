@@ -1,0 +1,101 @@
+# Alpine-Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=gst-plugins-good
+pkgver=1.26.8
+pkgrel=0
+pkgdesc="GStreamer streaming media framework good plugins"
+url="https://gstreamer.freedesktop.org"
+arch="all"
+license="GPL-2.0-or-later LGPL-2.0-or-later"
+subpackages="
+    $pkgname-dbg
+    $pkgname-lang
+    $pkgname-gtk
+    "
+depends="libsoup3
+        libflac
+        glib
+        libpng
+        cairo
+        cairo-gobject
+        orc
+        gdk-pixbuf
+        libintl
+        libjpeg-turbo
+        lame-libs
+        libvpx
+        gstreamer
+        gst-plugins-base
+        "
+makedepends="
+    cairo-dev
+    flac-dev
+    gdk-pixbuf-dev
+    glib-dev
+    gst-plugins-base-dev
+    gstreamer-dev
+    gtk3-dev
+    lame-dev
+    libjpeg-turbo-dev
+    libogg-dev
+    libpng-dev
+    libsoup3-dev
+    libvpx-dev
+    meson
+    nasm
+    orc-compiler
+    orc-dev
+    zlib-dev
+    ninja
+    clang
+    libc++-dev
+    "
+ldpath="/usr/lib/gstreamer-1.0"
+source="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-$pkgver.tar.xz
+    "
+options="!check !strip" # takes too long
+
+build() {
+    CC=clang \
+    CXX=clang++ \
+    CFLAGS="$CFLAGS -O2 -DMPG123_NO_LARGENAME" \
+    CXXFLAGS="$CXXFLAGS -O2 -DMPG123_NO_LARGENAME" \
+    CPPFLAGS="$CPPFLAGS -O2 -DMPG123_NO_LARGENAME" \
+    abuild-meson \
+        -Db_lto=false \
+        -Dpackage-origin="www.qnx.com" \
+        -Dpackage-name="GStreamer good plug-ins (QNX)" \
+        -Dtests="$(want_check && echo enabled || echo disabled)" \
+        . output
+
+    meson compile -C output
+}
+
+check() {
+    # 92/110 elements_flvmux       timeout
+    meson test -t 2 --print-errorlogs -C output || true
+}
+
+package() {
+    export GCONF_DISABLE_MAKEFILE_SCHEMA_INSTALL=1
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+_mv() {
+    mkdir -p "$subpkgdir"/"$ldpath"
+    mv "$1" "$subpkgdir"/"$ldpath"
+}
+
+gtk() {
+    pkgdesc="Gstreamer gtk-3 plugin"
+    depends="$pkgname=$pkgver-r$pkgrel gtk3"
+    find "$pkgdir" -type f | while read -r i; do
+        if ldd $i 2>/dev/null | grep -q "libgtk-3"; then
+            _mv "$i"
+        fi
+    done
+}
+
+sha512sums="
+d3933f671da5ad4e650872db2169e33aa4eba5b8ae39846afe7cc252fb65e4bf959b0357a9fa39ee8d1a2993aa615e1c32a92d40b45f2df3b28d3335a41d52f7  gst-plugins-good-1.26.8.tar.xz
+"

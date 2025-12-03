@@ -1,0 +1,50 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# QNX Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=json-glib
+pkgver=1.10.6
+pkgrel=0
+pkgdesc="JSON library built on GLib"
+arch="all"
+url="https://gitlab.gnome.org/GNOME/json-glib"
+license="LGPL-2.1-or-later"
+depends="glib"
+makedepends="gobject-introspection-dev glib-dev meson"
+subpackages="$pkgname-dev $pkgname-tests"
+source="https://download.gnome.org/sources/json-glib/${pkgver%.*}/json-glib-$pkgver.tar.xz
+        fix-printf-null.patch
+        "
+
+build() {
+    meson \
+        --prefix=/usr \
+        -Ddocumentation=disabled \
+        .  build
+    meson compile -C build
+}
+
+check() {
+    meson test --print-errorlogs -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+dev() {
+    default_dev
+    mkdir -p "$subpkgdir"/usr/
+    mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+tests() {
+    pkgdesc="Tests for the json-glib package"
+    mkdir -p "$subpkgdir"/usr/
+    mv "$pkgdir"/usr/share \
+        "$pkgdir"/usr/libexec \
+        "$subpkgdir"/usr/
+}
+
+sha512sums="
+e1c0e33b17333cf94beb381f505c1819090a11b616dcc23a883f231029dff277c2482823278cbf7b8a07e237d45cbfc7b05f132e1234beff609a739fd5704c6e  json-glib-1.10.6.tar.xz
+22091f5ae058684af6ad3500e7141da7a3f5e4c79e0153d15a42fd951eae095b54a4f6f41593a7351904b8996239ac6852eee52bfd90ceef77b481285f20e382  fix-printf-null.patch
+"

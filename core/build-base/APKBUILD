@@ -1,0 +1,17 @@
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=build-base
+pkgver=0.1
+pkgrel=0
+url=https://oss.qnx.com
+pkgdesc="Meta package for build base"
+depends="qnx-microkernel-dev qnx-gcc make"
+arch="noarch"
+license="MIT"
+options="!check"
+
+package() {
+	mkdir -p "$pkgdir"
+}
+
+

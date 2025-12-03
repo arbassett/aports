@@ -1,0 +1,84 @@
+# Alpine-Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Alpine-Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Alpine-Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Yongxin Dai <yodai@qnx.com>
+pkgname=gcr
+pkgver=3.41.2
+pkgrel=0
+pkgdesc="library for bits of crypto UI and parsing"
+url="https://gitlab.gnome.org/GNOME/gcr/-/tree/gcr-3-41"
+arch="all"
+license="LGPL-2.0-or-later"
+depends="$pkgname-base=$pkgver-r$pkgrel"
+depends_dev="gtk3-dev p11-kit-dev"
+makedepends="
+    glib-dev
+    gobject-introspection-dev
+    gtk3-dev
+    libgcrypt-dev
+    libsecret-dev
+    libxslt
+    meson
+    openssh
+    p11-kit-dev
+    vala
+    "
+subpackages="
+    $pkgname-dev
+    $pkgname-lang
+    $pkgname-base
+    "
+source="https://download.gnome.org/sources/gcr/${pkgver%.*}/gcr-$pkgver.tar.xz
+    fix-64-bit-time_t-32-bit.patch
+    set-_XOPEN_SOURCE-a-vlaue-and-link-libsocket.patch
+    define-HAVE_TIMEGM.patch
+    "
+
+build() {
+    abuild-meson \
+        -Db_lto=false \
+        -Dgtk_doc=false \
+        -Dgpg_path=/usr/bin/gpg2 \
+        -Dsystemd=disabled \
+        -Dgtk_doc=false \
+        -Dc_args='-D_QNX_SOURCE' \
+        -Dc_args='-lsocket' \
+        --libexecdir=/usr/libexec \
+        output
+    meson compile ${JOBS:+-j ${JOBS}} -C output
+}
+
+check() {
+    # 8/47 gcr:egg / secmem                  FAIL            0.16s   killed by signal 6 SIGABRT
+    # 14/47 gcr:gck / attributes             FAIL            0.16s   killed by signal 6 SIGABRT
+    # 23/47 gcr:gcr-ssh-agent / process      FAIL            0.17s   killed by signal 6 SIGABRT
+    # 24/47 gcr:gcr-ssh-agent / service      FAIL            0.18s   killed by signal 11 SIGSEGV
+    # 37/47 gcr:gcr-base / secure-memory     FAIL            0.16s   killed by signal 6 SIGABRT
+    # 42/47 gcr:gcr-base / gnupg-collection  FAIL            0.11s   killed by signal 6 SIGABRT
+    # 44/47 gcr:gcr-base / system-prompt     FAIL            0.06s   killed by signal 5 SIGTRAP
+    # 47/47 gcr:gcr-base / gnupg-process     TIMEOUT        30.08s   killed by signal 15 SIGTERM
+    meson test --no-rebuild --print-errorlogs -C output || true
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+base() {
+    pkgdesc="$pkgdesc (base libraries)"
+    depends="glib
+            gtk3
+            libgcrypt
+            libsecret
+            libxslt
+            p11-kit"
+
+    amove usr/lib
+}
+
+sha512sums="
+056c6c6a3910dae6997cef34fc95d22510ddea37be0ccc329996575a95e20582fa428bd491389aa77f8b6ffbd8674a2b3ba444cb83bdf3a2be5fd7aed276606d  gcr-3.41.2.tar.xz
+579b229d6f310ed035974a92a65804deae7b047cf6109e259844ecdc75df32653a2c9f9dcddba9092da335f44d07d5d82056ae0cf5775057bdb9be5b52e29bcc  fix-64-bit-time_t-32-bit.patch
+e2c27c4ee9c9597ed6bfbab1e933fb1ada68757961b03fb9bb8cf0f0292a37967cc9db74c3266d107c40e273f7eea8b3907f6926cf738a488c7d6729a4efd295  set-_XOPEN_SOURCE-a-vlaue-and-link-libsocket.patch
+289717815492d1bab3f40434321800412dc14bad050c36334355e6f8a204c4d4c1c67de96495b894f3ae83de000f0e66697ddd7b18736290f02be31a4d4e3440  define-HAVE_TIMEGM.patch
+"

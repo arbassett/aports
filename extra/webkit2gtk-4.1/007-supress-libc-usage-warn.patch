@@ -1,0 +1,95 @@
+diff --git a/Source/JavaScriptCore/CMakeLists.txt b/Source/JavaScriptCore/CMakeLists.txt
+index a4ddb7c8..be7b8619 100644
+--- a/Source/JavaScriptCore/CMakeLists.txt
++++ b/Source/JavaScriptCore/CMakeLists.txt
+@@ -1623,14 +1623,6 @@ set(JavaScriptCore_INTERFACE_DEPENDENCIES
+ WEBKIT_FRAMEWORK_DECLARE(JavaScriptCore)
+ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+ 
+-if (NOT WIN32)
+-    WEBKIT_ADD_TARGET_CXX_FLAGS(JavaScriptCore
+-        -Wunsafe-buffer-usage
+-        -Wunsafe-buffer-usage-in-libc-call
+-        -fsafe-buffer-usage-suggestions
+-    )
+-endif ()
+-
+ if (COMPILER_IS_GCC_OR_CLANG)
+     # Avoid using fused multiply-add instructions since this could give different results
+     # for e.g. parseInt depending on the platform and compilation flags.
+diff --git a/Source/WTF/wtf/CMakeLists.txt b/Source/WTF/wtf/CMakeLists.txt
+index 8f5192d7..d5885022 100644
+--- a/Source/WTF/wtf/CMakeLists.txt
++++ b/Source/WTF/wtf/CMakeLists.txt
+@@ -790,14 +790,6 @@ set(WTF_INTERFACE_DEPENDENCIES WTF_CopyHeaders)
+ WEBKIT_FRAMEWORK_DECLARE(WTF)
+ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+ 
+-if (PORT STREQUAL GTK OR PORT STREQUAL WPE)
+-    WEBKIT_ADD_TARGET_CXX_FLAGS(WTF
+-        -Wunsafe-buffer-usage
+-        -Wunsafe-buffer-usage-in-libc-call
+-        -fsafe-buffer-usage-suggestions
+-    )
+-endif ()
+-
+ WEBKIT_COPY_FILES(WTF_CopyHeaders
+     DESTINATION ${WTF_FRAMEWORK_HEADERS_DIR}/wtf
+     FILES ${WTF_PUBLIC_HEADERS}
+diff --git a/Source/WebCore/CMakeLists.txt b/Source/WebCore/CMakeLists.txt
+index db3d63e2..9ba3afe5 100644
+--- a/Source/WebCore/CMakeLists.txt
++++ b/Source/WebCore/CMakeLists.txt
+@@ -2704,14 +2704,6 @@ WEBKIT_FRAMEWORK_DECLARE(WebCore)
+ WEBKIT_LIBRARY_DECLARE(WebCoreTestSupport)
+ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+ 
+-if (PORT STREQUAL GTK OR PORT STREQUAL WPE)
+-    WEBKIT_ADD_TARGET_CXX_FLAGS(WebCore
+-        -Wunsafe-buffer-usage
+-        -Wunsafe-buffer-usage-in-libc-call
+-        -fsafe-buffer-usage-suggestions
+-    )
+-endif ()
+-
+ if (ENABLE_MALLOC_HEAP_BREAKDOWN)
+     list(APPEND WebCore_LIBRARIES ${MALLOC_HEAP_BREAKDOWN_LIBRARIES})
+ endif ()
+diff --git a/Source/WebCore/PAL/pal/CMakeLists.txt b/Source/WebCore/PAL/pal/CMakeLists.txt
+index 6cb8365c..952f4d5f 100644
+--- a/Source/WebCore/PAL/pal/CMakeLists.txt
++++ b/Source/WebCore/PAL/pal/CMakeLists.txt
+@@ -80,14 +80,6 @@ set(PAL_INTERFACE_DEPENDENCIES PAL_CopyHeaders)
+ WEBKIT_FRAMEWORK_DECLARE(PAL)
+ WEBKIT_INCLUDE_CONFIG_FILES_IF_EXISTS()
+ 
+-if (PORT STREQUAL GTK OR PORT STREQUAL WPE)
+-    WEBKIT_ADD_TARGET_CXX_FLAGS(PAL
+-        -Wunsafe-buffer-usage
+-        -Wunsafe-buffer-usage-in-libc-call
+-        -fsafe-buffer-usage-suggestions
+-    )
+-endif ()
+-
+ WEBKIT_COPY_FILES(PAL_CopyHeaders
+     DESTINATION ${PAL_FRAMEWORK_HEADERS_DIR}/pal
+     FILES ${PAL_PUBLIC_HEADERS}
+diff --git a/Source/WebKit/CMakeLists.txt b/Source/WebKit/CMakeLists.txt
+index dcec2e6c..9f3cf14a 100644
+--- a/Source/WebKit/CMakeLists.txt
++++ b/Source/WebKit/CMakeLists.txt
+@@ -821,14 +821,6 @@ WEBKIT_SETUP_SWIFT_AND_GENERATE_SWIFT_CPP_INTEROP_HEADER(WebKit WebKit
+     "${WEBKIT_DIR}/Modules/Internal"
+     "${WebKit_DERIVED_SOURCES_DIR}/WebKit-Swift-CPP.h")
+ 
+-if (PORT STREQUAL GTK OR PORT STREQUAL WPE)
+-    WEBKIT_ADD_TARGET_CXX_FLAGS(WebKit
+-        -Wunsafe-buffer-usage
+-        -Wunsafe-buffer-usage-in-libc-call
+-        -fsafe-buffer-usage-suggestions
+-    )
+-endif ()
+-
+ if (WebKit_PUBLIC_FRAMEWORK_HEADERS)
+     WEBKIT_COPY_FILES(WebKit_CopyHeaders
+         DESTINATION ${WebKit_FRAMEWORK_HEADERS_DIR}/WebKit

@@ -1,0 +1,170 @@
+diff -ru valkey/cmake/Modules/ValkeySetup.cmake valkey-qnx/cmake/Modules/ValkeySetup.cmake
+--- valkey/cmake/Modules/ValkeySetup.cmake	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/cmake/Modules/ValkeySetup.cmake	2025-10-15 13:46:53.000000000 +0000
+@@ -260,8 +260,8 @@
+ elseif (UNIX)
+     add_valkey_server_linker_option("-rdynamic")
+     add_valkey_server_linker_option("-pthread")
+-    add_valkey_server_linker_option("-ldl")
+     add_valkey_server_linker_option("-lm")
++    add_valkey_server_linker_option("-lsocket")
+ endif ()
+ 
+ if (VALKEY_DEBUG_BUILD)
+diff -ru valkey/src/CMakeLists.txt valkey-qnx/src/CMakeLists.txt
+--- valkey/src/CMakeLists.txt	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/CMakeLists.txt	2025-10-15 13:50:59.000000000 +0000
+@@ -19,7 +19,7 @@
+ 
+ if (VALKEY_RELEASE_BUILD)
+     # Enable LTO for Release build
+-    set_property(TARGET valkey-server PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
++    set_property(TARGET valkey-server PROPERTY INTERPROCEDURAL_OPTIMIZATION false)
+ endif ()
+ 
+ if (DEBUG_FORCE_DEFRAG)
+diff -ru valkey/src/bio.c valkey-qnx/src/bio.c
+--- valkey/src/bio.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/bio.c	2025-10-15 13:36:58.000000000 +0000
+@@ -64,13 +64,14 @@
+ #include "bio.h"
+ #include <stdatomic.h>
+ 
++/*
+ static char *bio_worker_title[] = {
+     "bio_close_file",
+     "bio_aof",
+     "bio_lazy_free",
+ };
+-
+-#define BIO_WORKER_NUM (sizeof(bio_worker_title) / sizeof(*bio_worker_title))
++*/
++#define BIO_WORKER_NUM (3)
+ 
+ static unsigned int bio_job_to_worker[] = {
+     [BIO_CLOSE_FILE] = 0,
+diff -ru valkey/src/crccombine.c valkey-qnx/src/crccombine.c
+--- valkey/src/crccombine.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/crccombine.c	2025-10-15 13:39:38.000000000 +0000
+@@ -38,7 +38,7 @@
+   madler@alumni.caltech.edu
+ */
+ 
+-#define STATIC_ASSERT(VVV) do {int test = 1 / (VVV);test++;} while (0)
++#define STATIC_ASSERT(VVV) _Static_assert(VVV, "Assert")
+ 
+ #if !((defined(__i386__) || defined(__X86_64__)))
+ 
+diff -ru valkey/src/fmacros.h valkey-qnx/src/fmacros.h
+--- valkey/src/fmacros.h	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/fmacros.h	2025-10-15 13:16:51.000000000 +0000
+@@ -48,7 +48,7 @@
+ #define _ALL_SOURCE
+ #endif
+ 
+-#if defined(__linux__) || defined(__OpenBSD__)
++#if defined(__linux__) || defined(__OpenBSD__) || defined(__QNX__)
+ #define _XOPEN_SOURCE 700
+ /*
+  * On NetBSD, _XOPEN_SOURCE undefines _NETBSD_SOURCE and
+diff -ru valkey/src/networking.c valkey-qnx/src/networking.c
+--- valkey/src/networking.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/networking.c	2025-10-15 13:32:42.000000000 +0000
+@@ -44,6 +44,8 @@
+ #include <ctype.h>
+ #include <stdatomic.h>
+ 
++#define IOV_MAX _SC_IOV_MAX
++
+ /* This struct is used to encapsulate filtering criteria for operations on clients
+  * such as identifying specific clients to kill or retrieve. Each field in the struct
+  * represents a filter that can be applied based on specific attributes of a client. */
+diff -ru valkey/src/pqsort.c valkey-qnx/src/pqsort.c
+--- valkey/src/pqsort.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/pqsort.c	2025-10-15 13:35:23.000000000 +0000
+@@ -46,7 +46,7 @@
+     int (*)(const void *, const void *));
+ static inline void	 swapfunc (char *, char *, size_t, int);
+ 
+-#define min(a, b)	(a) < (b) ? a : b
++//#define min(a, b)	(a) < (b) ? a : b
+ 
+ /*
+  * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
+diff -ru valkey/src/server.h valkey-qnx/src/server.h
+--- valkey/src/server.h	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/server.h	2025-10-15 13:23:00.000000000 +0000
+@@ -51,6 +51,7 @@
+ #include <syslog.h>
+ #include <netinet/in.h>
+ #include <sys/socket.h>
++#include <sys/time.h>
+ #include <signal.h>
+ 
+ #ifdef HAVE_LIBSYSTEMD
+@@ -1453,7 +1454,7 @@
+ 
+ #define RDB_SAVE_INFO_INIT {-1, 0, "0000000000000000000000000000000000000000", -1}
+ 
+-struct malloc_stats {
++struct malloc_stats_valkey {
+     size_t zmalloc_used;
+     size_t process_rss;
+     size_t allocator_allocated;
+@@ -1716,7 +1717,7 @@
+     long long stat_sync_partial_ok;                /* Number of accepted PSYNC requests. */
+     long long stat_sync_partial_err;               /* Number of unaccepted PSYNC requests. */
+     commandlog commandlog[COMMANDLOG_TYPE_NUM];    /* Logs of commands. */
+-    struct malloc_stats cron_malloc_stats;         /* sampled in serverCron(). */
++    struct malloc_stats_valkey cron_malloc_stats;         /* sampled in serverCron(). */
+     long long stat_net_input_bytes;                /* Bytes read from network. */
+     long long stat_net_output_bytes;               /* Bytes written to network. */
+     long long stat_net_repl_input_bytes;           /* Bytes read during replication, added to stat_net_input_bytes in 'info'. */
+diff -ru valkey/src/socket.c valkey-qnx/src/socket.c
+--- valkey/src/socket.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/socket.c	2025-10-15 13:33:16.000000000 +0000
+@@ -31,6 +31,8 @@
+ #include "connhelpers.h"
+ #include "io_threads.h"
+ 
++#define IOV_MAX _SC_IOV_MAX
++
+ /* The connections module provides a lean abstraction of network connections
+  * to avoid direct socket and async event management across the server code base.
+  *
+diff -ru valkey/src/tls.c valkey-qnx/src/tls.c
+--- valkey/src/tls.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/tls.c	2025-10-15 14:01:02.000000000 +0000
+@@ -51,7 +51,7 @@
+ #define REDIS_TLS_PROTO_TLSv1_1 (1 << 1)
+ #define REDIS_TLS_PROTO_TLSv1_2 (1 << 2)
+ #define REDIS_TLS_PROTO_TLSv1_3 (1 << 3)
+-
++#define IOV_MAX _SC_IOV_MAX
+ /* Use safe defaults */
+ #ifdef TLS1_3_VERSION
+ #define REDIS_TLS_PROTO_DEFAULT (REDIS_TLS_PROTO_TLSv1_2 | REDIS_TLS_PROTO_TLSv1_3)
+diff -ru valkey/src/unix.c valkey-qnx/src/unix.c
+--- valkey/src/unix.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/unix.c	2025-10-15 13:34:56.000000000 +0000
+@@ -26,7 +26,7 @@
+ 
+ #include "server.h"
+ #include "connection.h"
+-
++#define IOV_MAX _SC_IOV_MAX
+ static ConnectionType CT_Unix;
+ 
+ static const char *connUnixGetType(connection *conn) {
+diff -ru valkey/src/util.c valkey-qnx/src/util.c
+--- valkey/src/util.c	2025-10-15 14:30:59.000000000 +0000
++++ valkey-qnx/src/util.c	2025-10-15 13:59:22.000000000 +0000
+@@ -1071,7 +1071,7 @@
+  * i.e timezone variables are linux specific.
+  */
+ long getTimeZone(void) {
+-#if defined(__linux__) || defined(__sun)
++#if defined(__linux__) || defined(__sun) || defined(__QNX__)
+     return timezone;
+ #else
+     struct timezone tz;

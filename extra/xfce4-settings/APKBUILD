@@ -1,0 +1,44 @@
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=xfce4-settings
+pkgver=4.21.0
+pkgrel=1
+pkgdesc="Settings manager for xfce"
+url="https://xfce.org/"
+arch="all"
+license="GPL-2.0-only"
+subpackages="$pkgname-lang"
+depends="gsettings-desktop-schemas exo garcon libnotify libxfce4ui gtk3"
+makedepends="
+	exo-dev
+	garcon-dev
+	intltool
+	libnotify-dev
+	libxfce4ui-dev
+	xfce4-dev-tools
+	gtk3-dev
+	meson
+	"
+source="https://archive.xfce.org/src/xfce/xfce4-settings/${pkgver%.*}/xfce4-settings-$pkgver.tar.xz"
+
+build() {
+    abuild-meson \
+        --prefix=/usr \
+	-Dx11="disabled" \
+	-Dwayland="enabled" \
+	. build
+    meson compile -C build
+}
+
+check() {
+    meson test --print-errorlogs -C build
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C build
+}
+
+
+sha512sums="
+87293b0f7eb87ce8526803d149bde98b56655e6ce18b875ab7f822c434274c31689e2a7d00075d4f0ca5a91c07e5e852387459cbd032e4f44f3985c7a65d3d6a  xfce4-settings-4.21.0.tar.xz
+"

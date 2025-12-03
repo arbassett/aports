@@ -1,0 +1,60 @@
+# Mantainer: Aaron Bassett <abassett@qnx.com>
+pkgname="meson"
+pkgver=1.9.1
+pkgrel=1
+pkgdesc="The Meson Build System"
+url="http://mesonbuild.com/"
+arch="all"
+license="Apache-2.0"
+options="!strip"
+subpackages="
+        $pkgname-doc
+	$pkgname-bash-completion
+	$pkgname-zsh-completion
+	abuild-$pkgname:abuild:noarch"
+depends="python3 zlib-ng ninja"
+makedepends="python3-build python3-wheel python3-pyproject-hooks python3-gpep517 python3-setuptools"
+source="https://github.com/mesonbuild/meson/releases/download/$pkgver/meson-$pkgver.tar.gz
+        abuild-meson
+"
+options="!check"
+
+prepare() {
+    default_prepare
+
+    # https://github.com/mesonbuild/meson/issues/10104
+    rm -r "$builddir/test cases/linuxlike/13 cmake dependency"
+}
+
+build() {
+    gpep517 build-wheel \
+        --wheel-dir .dist \
+        --output-fd 3 3>&1 >&2
+}
+
+check() {
+    MESON_CI_JOBNAME=thirdparty \
+        NINJA=ninja \
+        NINJA_1_9_OR_NEWER=1 \
+        python3 run_tests.py
+}
+
+package() {
+    python3 -m installer -d "$pkgdir" .dist/*.whl
+
+    install -Dm644 data/shell-completions/zsh/* -t "$pkgdir"/usr/share/zsh/site-functions
+    install -Dm644 data/shell-completions/bash/* -t "$pkgdir"/usr/share/bash-completion/completions
+}
+
+abuild() {
+	pkgdesc="$pkgdesc (abuild wrapper)"
+	depends="$pkgname=$pkgver-r$pkgrel abuild"
+	install_if="$pkgname=$pkgver-r$pkgrel abuild"
+
+	install -Dm0755 "$srcdir"/abuild-meson -t "$subpkgdir"/usr/bin
+}
+
+sha512sums="
+e5a167ff035f1494d6b1df7d3bf6feb37aa6421222fd27bfbebb36de4c7c3083e327679b82b7d9d3d4a2cc4dc2a3babb7cbf03358e4a2784d47eb34502014a1c  meson-1.9.1.tar.gz
+8de6d6fc7bb1bfbfdaee8b3f3d035bd2b77905e265153787523f0b9af6670adc7a1c316728134dabf93f96e08862f758514cef36fa40c2224ba391140a75acaa  abuild-meson
+"

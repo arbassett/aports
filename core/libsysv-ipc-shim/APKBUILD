@@ -1,0 +1,35 @@
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=libsysv-ipc-shim
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Felix's ipc.h shim"
+url="https://qnx.com"
+arch="all"
+license="LicenseRef-QDL-Non-Commercial"
+options="!check"
+makedepends="clang"
+subpackages="$pkgname-dev"
+source="libsysv-ipc.tar.gz
+    "
+builddir="$srcdir"/libsysv-ipc
+build() {
+    CC=clang ./build.sh
+}
+
+package() {
+    mkdir -p "$pkgdir"/usr/include/shims
+    mkdir -p "$pkgdir"/usr/lib
+
+    cd $builddir
+    cp -r include/sys "$pkgdir"/usr/include/shims
+    cp -r libsysv-ipc.so "$pkgdir"/usr/lib
+}
+
+dev() {
+    default_dev
+    depends="$pkgname=$pkgver-r$pkgrel"
+}
+
+sha512sums="
+acd158c7bc2cfd695f9ba44ad8ca1f879f49a3ca009515a5ab4797fa4f51d18b94928e6d792d5a7b2bebee1b36393eabbc55b6b82310c23b9a2b7804fada01fe  libsysv-ipc.tar.gz
+"

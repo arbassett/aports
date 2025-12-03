@@ -1,0 +1,65 @@
+# Contributor: z3bra <willy at mailoo dot org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+# QNX Maintainer: Felix Xing <fxing@qnx.com>
+
+pkgname=libcaca
+pkgver=0.99_beta20
+_ver=${pkgver/_/.}
+pkgrel=0
+pkgdesc="graphics library that outputs text instead of pixels"
+url="http://caca.zoy.org/wiki/libcaca"
+arch="all"
+license="WTFPL"
+depends="ncurses qnx-io-sock"
+makedepends="ncurses-dev automake autoconf libtool qnx-io-sock-dev"
+subpackages="
+    $pkgname-static
+    $pkgname-dev
+    $pkgname-doc
+    $pkgname-apps
+    "
+source="$pkgname-$pkgver.tar.gz::https://github.com/cacalabs/libcaca/archive/refs/tags/v$_ver.tar.gz
+        add-missing-caca-alloc2d.patch"
+builddir="$srcdir"/libcaca-$_ver
+
+prepare() {
+    default_prepare
+    sh bootstrap
+    # We need to do this since the _beta20 suffix that is put
+    # on version is invalid
+    sed -e "s|@VERSION@|${pkgver%_*}|" \
+        -i cxx/caca++.pc.in \
+        -i caca/caca.pc.in
+}
+
+build() {
+    ./configure \
+        --build=$CBUILD \
+        --host=$CHOST \
+        --prefix=/usr \
+        --enable-ncurses \
+        LDFLAGS=-lsocket
+    make
+}
+
+package() {
+    make DESTDIR=$pkgdir install
+    install COPYING -Dm644 $pkgdir/usr/share/licenses/$pkgname/LICENSE
+}
+
+apps() {
+    mkdir -p "$subpkgdir"/usr/
+    mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+_py() {
+    pkgdesc="$pkgdesc (python bindings)"
+    depends="$pkgname=$pkgver-r$pkgrel"
+
+    amove usr/lib/python*
+}
+
+sha512sums="
+012ab757bd996a7a0302d5b7d9a94c4e7db8532378096529b9617f815fdcd3dbea9c0e3fdfd14a1aeb8936f0b412e38a1bba8b846ab4bc61ca661df6a8d7a332  libcaca-0.99_beta20.tar.gz
+369ea78c826f4bee7fa86e276bccc5f837f36373ee8cee47aa8d7865451bb2cdd777b4bb6c4abd6fab400a9d32fccebe620704a28442d8247ff463ea8c4ee32d  add-missing-caca-alloc2d.patch
+"

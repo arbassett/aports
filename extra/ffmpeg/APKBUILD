@@ -1,0 +1,288 @@
+# Alpine-Contributor: Sergei Lukin <sergej.lukin@gmail.com>
+# Alpine-Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Alpine-Contributor: Jakub Skrzypnik <j.skrzypnik@openmailbox.org>
+# Maintainer: Felix Xing <fxing@qnx.com>
+
+pkgname=ffmpeg
+pkgver=8.0
+pkgrel=4
+pkgdesc="Complete and free Internet live audio and video broadcasting solution for Linux/Unix"
+url="https://ffmpeg.org/"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="
+    perl
+    aom-dev
+    bzip2-dev
+    clang
+    dav1d-dev
+    fontconfig-dev
+    freetype-dev
+    fribidi-dev
+    harfbuzz-dev
+    lame-dev
+    libass-dev
+    libtheora-dev
+    libjxl-dev
+    libvorbis-dev
+    libvpx-dev
+    libwebp-dev
+    libxml2-dev
+    svt-av1-dev
+    gsm-dev
+    nasm
+    openssl-dev
+    opus-dev
+    perl-dev
+    soxr-dev
+    vidstab-dev
+    xvidcore-dev
+    zimg-dev
+    zlib-dev
+    qnx-alsa-dev
+    "
+checkdepends="rsync"
+depends="$pkgname-libs=$pkgver-r$pkgrel"
+subpackages="
+    $pkgname-dbg
+    $pkgname-dev
+    $pkgname-doc
+    $pkgname-libavcodec
+    $pkgname-libavdevice
+    $pkgname-libavfilter
+    $pkgname-libavformat
+    $pkgname-libavutil
+    $pkgname-libswresample
+    $pkgname-libswscale
+    $pkgname-libs
+    "
+source="https://ffmpeg.org/releases/ffmpeg-$pkgver.tar.xz
+        enable_encoders
+        enable_decoders
+    "
+options="!check"
+# Why? No one in their right mind should use QNX for multi-media production
+
+build() {
+    ./configure \
+        --cc=clang \
+        --cxx=clang++ \
+        --as=clang \
+        --ar=llvm-ar \
+        --nm=llvm-nm \
+        --ranlib=llvm-ranlib \
+        --strip=llvm-strip \
+        \
+        --enable-pic \
+        --enable-pthreads \
+        --enable-shared \
+        --enable-lto=no \
+        --enable-gpl \
+        --enable-version3 \
+        --optflags="-O3" \
+        --prefix=/usr \
+        \
+        --enable-asm \
+        --enable-muxers \
+        --enable-demuxers \
+        --enable-avfilter \
+        \
+        --disable-static \
+        --disable-vaapi \
+        --disable-vdpau \
+        --disable-vulkan \
+        \
+        --enable-alsa \
+        --enable-libaom \
+        --enable-libass \
+        --enable-libfontconfig \
+        --enable-libfreetype \
+        --enable-libfribidi \
+        --enable-libgsm \
+        --enable-libharfbuzz \
+        --enable-libdav1d \
+        --enable-libmp3lame \
+        --enable-libopus \
+        --enable-libsoxr \
+        --enable-libsvtav1 \
+        --enable-libtheora \
+        --enable-libvidstab \
+        --enable-libvorbis \
+        --enable-libvpx \
+        --enable-libwebp \
+        --enable-libxml2 \
+        --enable-libxvid \
+        --enable-libzimg \
+        --enable-libjxl \
+        --enable-openssl \
+        \
+        --disable-librtmp \
+        --disable-lzma \
+        --disable-ladspa \
+        --disable-libbluray \
+        --disable-libdrm \
+        --disable-liblc3 \
+        --disable-libopenmpt \
+        --disable-libplacebo \
+        --disable-libpulse \
+        --disable-librav1e \
+        --disable-librist \
+        --disable-libsrt \
+        --disable-libssh \
+        --disable-libv4l2 \
+        --disable-libx264 \
+        --disable-libx265 \
+        --disable-libxcb \
+        --disable-libzmq \
+        --disable-lv2 \
+        \
+        --disable-encoders \
+        --disable-decoders \
+        --disable-decoder=h264,hevc,vc1,prores_raw \
+        --enable-encoder="$(perl -pe 's{^(\w*).*}{$1,}gs' <"$srcdir/enable_encoders")" \
+        --enable-decoder="$(perl -pe 's{^(\w*).*}{$1,}gs' <"$srcdir/enable_decoders")"
+    # delete the last 5 lines to enable all codec (including non-free)
+    make
+    clang -o tools/qt-faststart $CFLAGS $LDFLAGS tools/qt-faststart.c
+}
+
+# https://ffmpeg.org/fate.html
+check() {
+    #./configure \
+    #    --samples=fate-suite/
+    #make fate-rsync
+    #make fate-list
+    #make fate
+    # Due to QNX firewall blockage, regression tests are not available
+
+    LD_LIBRARY_PATH="$PWD/libavcodec:$PWD/libavdevice:$PWD/libavfilter:$PWD/libavformat:$PWD/libavutil:$PWD/libswresample:$PWD/libswscale:$LD_LIBRARY_PATH" \
+    make check
+}
+
+package() {
+    make DESTDIR="$pkgdir" install install-man
+    install -D -m755 tools/qt-faststart "$pkgdir/usr/bin/qt-faststart"
+}
+
+doc() {
+    default_doc
+
+    amove usr/share/ffmpeg/examples
+}
+
+libavcodec() {
+    pkgdesc="$pkgdesc (libavcodec library)"
+    depends="$pkgname-libswresample=$pkgver-r$pkgrel
+            $pkgname-libavutil=$pkgver-r$pkgrel
+            libvpx
+            libwebpmux
+            libiconv
+            libdav1d
+            aom-libs
+            gsm
+            libjxl
+            lame-libs
+            opus
+            libSvtAv1Enc
+            libtheora
+            libvorbis
+            libwebp
+            xvidcore
+            zlib
+            "
+
+    amove usr/lib/libavcodec.so.*
+}
+
+libavdevice() {
+    pkgdesc="$pkgdesc (libavdevice library)"
+    depends="qnx-alsa
+            $pkgname-libavfilter=$pkgver-r$pkgrel
+            $pkgname-libavformat=$pkgver-r$pkgrel
+            $pkgname-libavcodec=$pkgver-r$pkgrel
+            $pkgname-libavutil=$pkgver-r$pkgrel
+            "
+
+    amove usr/lib/libavdevice.so.*
+}
+
+libavfilter() {
+    pkgdesc="$pkgdesc (libavfilter library)"
+    depends="
+            $pkgname-libswscale=$pkgver-r$pkgrel
+            $pkgname-libavformat=$pkgver-r$pkgrel
+            $pkgname-libavcodec=$pkgver-r$pkgrel
+            $pkgname-libswresample=$pkgver-r$pkgrel
+            $pkgname-libavutil=$pkgver-r$pkgrel
+            harfbuzz
+            fribidi
+            libass
+            vidstab
+            zimg
+            fontconfig
+            freetype
+            "
+    
+
+    amove usr/lib/libavfilter.so.*
+}
+
+libavformat() {
+    pkgdesc="$pkgdesc (libavformat library)"
+    depends="
+            $pkgname-libavcodec=$pkgver-r$pkgrel
+            $pkgname-libavutil=$pkgver-r$pkgrel
+            libxml2
+            libbz2
+            zlib
+            libssl3
+            libcrypto3
+            qnx-io-sock
+            libiconv
+            libtheora
+            "
+
+    amove usr/lib/libavformat.so.*
+}
+
+libavutil() {
+    pkgdesc="$pkgdesc (libavutil library)"
+    depends="libcrypto3"
+
+    amove usr/lib/libavutil.so.*
+}
+
+libswresample() {
+    pkgdesc="$pkgdesc (libswresample library)"
+    depends="$pkgname-libavutil=$pkgver-r$pkgrel soxr"
+    
+    amove usr/lib/libswresample.so.*
+}
+
+libswscale() {
+    pkgdesc="$pkgdesc (libswscale library)"
+    depends="$pkgname-libavutil=$pkgver-r$pkgrel"
+
+    amove usr/lib/libswscale.so.*
+}
+
+libs() {
+    pkgdesc="compat hack for all ffmpeg libs"
+
+    mkdir -p "$subpkgdir"
+    depends="
+        $pkgname-libavcodec=$pkgver-r$pkgrel
+        $pkgname-libavdevice=$pkgver-r$pkgrel
+        $pkgname-libavfilter=$pkgver-r$pkgrel
+        $pkgname-libavformat=$pkgver-r$pkgrel
+        $pkgname-libavutil=$pkgver-r$pkgrel
+        $pkgname-libswresample=$pkgver-r$pkgrel
+        $pkgname-libswscale=$pkgver-r$pkgrel
+        "
+}
+
+sha512sums="
+96f01fc3b881e208e8d35d858b2f60627f298b06103195e3e753b1c6429810d7a484d4daeebad6d0810172616383d103dfb5fcadc4512726c3719800d24a3fde  ffmpeg-8.0.tar.xz
+ad8ac517709ca901ac54aa790940deb0bef697b6134071bcd5133f34a87f7db0d737bc5ba611991ceb529ef0871d453c7bb01ecc7ab4075bc9ffa65b7f448135  enable_encoders
+458214435d63f5d1cc29bc1e960396497b74264774aef2f1788c102410b3536a2ff991d0b3eeb5c8a100c0e6de85316cb96d6a1d1baf05b30d94fad0279b6eeb  enable_decoders
+"

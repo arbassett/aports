@@ -1,0 +1,132 @@
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Alpine-Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Maintainer: Leo Shen <yishen@qnx.com>
+
+pkgname=git
+pkgver=2.51.0
+pkgrel=1
+pkgdesc="Distributed version control system"
+url="https://www.git-scm.com/"
+arch="all"
+license="GPL-2.0-only"
+options="!check"
+depends="curl expat zlib-ng libiconv pcre2 gettext-libs qnx-io-sock"
+makedepends="curl-dev pcre2-dev expat-dev zlib-ng-dev perl libiconv-dev gettext-dev qnx-io-sock-dev asciidoc xmlto"
+# note that order matters
+subpackages="
+    $pkgname-bash-completion
+    $pkgname-prompt::noarch
+    perl-$pkgname:_perl_git:noarch
+    $pkgname-svn::noarch
+    $pkgname-perl:_git_perl:noarch
+    $pkgname-doc
+    "
+source="
+    https://www.kernel.org/pub/software/scm/git/git-$pkgver.tar.xz
+    qnx-build.patch
+"
+
+_gitcoredir="usr/lib/git-core"
+
+prepare() {
+    default_prepare
+
+    echo "
+NO_GETTEXT=YesPlease
+NO_SVN_TESTS=YesPlease
+NO_REGEX=YesPlease
+NO_SYS_POLL_H=1
+NEED_LIBICONV=Yes
+INSTALL_SYMLINKS=1
+CFLAGS=$CFLAGS -D_QNX_SOURCE
+LDFLAGS=$LDFLAGS -shared-libgcc -lregex -liconv
+USE_LIBPCRE2=YesPlease
+PYTHON_PATH=/usr/bin/python3
+    " > config.mak
+
+    # Unified /usr
+    export _makeflags="prefix=/usr
+    	gitexecdir=/$_gitcoredir
+	perllibdir=$(_perl_config vendorlib)
+    "
+}
+
+build() {
+    make $_makeflags all
+    make -C contrib/subtree $_makeflags
+    make -C contrib/diff-highlight $_makeflags
+    make $_makeflags man
+}
+
+package() {
+    make install \
+        DESTDIR=$pkgdir \
+        INSTALLDIRS=vendor \
+	$_makeflags \
+        install install-man
+
+    make -C contrib/subtree DESTDIR=$pkgdir $_makeflags install
+    install -Dm755 contrib/diff-highlight/diff-highlight -t "$pkgdir"/usr/bin/
+
+    mkdir -p "$pkgdir"/var/git
+    install -Dm644 contrib/completion/git-completion.bash \
+        "$pkgdir"/usr/share/bash-completion/completions/git
+    install -Dm644 contrib/completion/git-prompt.sh \
+        "$pkgdir"/usr/share/git-core/git-prompt.sh
+}
+
+
+svn() {
+    pkgdesc="Subversion support for git"
+    depends="
+        perl
+        perl-git-svn=$pkgver-r$pkgrel
+        perl-subversion
+        perl-term-readkey
+        "
+
+    amove $_gitcoredir/git-svn
+}
+
+_perl_git() {
+    pkgdesc="Perl interface to Git"
+    depends="git=$pkgver-r$pkgrel perl-error"
+
+    local i
+    for i in "$(_perl_config vendorlib)" "$(_perl_config vendorarch)"; do
+        [ -d "$pkgdir/$i" ] || continue
+        amove $i
+    done
+}
+
+
+_git_perl() {
+    pkgdesc="Additional Git commands that requires perl"
+    depends="git=$pkgver-r$pkgrel perl-git=$pkgver-r$pkgrel perl"
+    install_if="git=$pkgver-r$pkgrel perl"
+
+    mkdir -p "$subpkgdir"/usr/lib
+    cd "$pkgdir"
+    find . -type f -print0 | xargs -0 file --mime-type | grep perl | cut -d: -f1 | while read -r f; do
+        amove "$f"
+    done
+    find "$subpkgdir" -name perllocal.pod -delete
+}
+
+prompt() {
+    pkgdesc="bash and zsh prompt integration for Git"
+    depends="git=$pkgver-r$pkgrel"
+
+    amove usr/share/git-core/git-prompt.sh
+}
+
+
+# Prints values of the Config.pm variable $1.
+_perl_config() {
+    perl -e "use Config; print \$Config{$1};"
+}
+
+sha512sums="
+2b8c59589266c0c9e58a9f4fda4a970a8a492e2e0ecbafc414fcfacac4a04251f0115b3676f4599a415b53906f1dea312b18a42e9bde455286abd62ec327beaf  git-2.51.0.tar.xz
+52809f18070fdf26c8bf6c9495cf354aa4814f4852dd7f4c892281f5474cac11ad30ffb34417de2f107d69cdbca40101226fcd20a021f7bccdcc136f425894ec  qnx-build.patch
+"

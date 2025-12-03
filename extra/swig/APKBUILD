@@ -1,0 +1,50 @@
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=swig
+pkgver=4.3.1
+pkgrel=1
+pkgdesc="A compiler that makes it easy to integrate C and C++ code with scripting languages"
+url="https://www.swig.org/"
+arch="all"
+license="GPL-3.0-only"
+depends="zlib-ng pcre2 libc++"
+makedepends="zlib-ng-dev pcre2-dev bison clang libc++-dev"
+checkdepends="boost-dev perl-dev python3-dev"
+subpackages="$pkgname-doc"
+source="https://downloads.sourceforge.net/swig/swig-$pkgver.tar.gz
+	fix-test-sed-PATH.patch
+	"
+#TODO: enable when we package boost
+options="!check"
+build() {
+	CC=clang \
+    CXX=clang++ \
+    CFLAGS="$CFLAGS -Qunused-arguments" \
+    CXXFLAGS="$CXXFLAGS -Qunused-arguments" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--with-python3=/usr/bin/python3
+	make
+}
+
+check() {
+	(
+	# ccache test seems broken with ccache in the path..
+	export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+	make -C CCache check
+	)
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -D -m644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+	install -D -m644 LICENSE-UNIVERSITIES "$pkgdir"/usr/share/licenses/$pkgname/LICENSE-UNIVERSITIES
+}
+
+
+sha512sums="
+8958f7bc3345549a9bc4e00aa8d40a99f6c4bb92b95d627c8796cf8f8d1ba0041a89cab542f171778c2b26aa2a877767181ae9bd2c05fd055f373a32a463399c  swig-4.3.1.tar.gz
+3073d77380517f9b0efb916738814aa868e8d4b076990e0fb076f83c071fec95f4abb96fa2e239253cbda0ec44bc920d4df8680960d4c1eec9ffb8e3f2ed33a0  fix-test-sed-PATH.patch
+"

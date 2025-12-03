@@ -1,0 +1,50 @@
+# Alpine-Contributor: Leo <thinkabit.ukim@gmail.com>
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=mpg123
+pkgver=1.33.3
+pkgrel=0
+pkgdesc="Console-based MPEG Audio Player for Layers 1, 2 and 3"
+options="libtool"
+url="https://www.mpg123.org/"
+arch="all"
+license="LGPL-2.1-only"
+subpackages="$pkgname-libs $pkgname-dev $pkgname-doc"
+depends="qnx-alsa qnx-io-sock $pkgname-libs=$pkgver-r$pkgrel"
+makedepends="libtool qnx-alsa-dev ncurses-dev clang libc++-dev"
+source="https://www.mpg123.org/download/mpg123-$pkgver.tar.bz2
+        001-add-missing-headers.patch
+        "
+
+build() {
+    CC=clang \
+    CXX=clang++ \
+    CFLAGS="$CFLAGS -Qunused-arguments" \
+    CXXFLAGS="$CXXFLAGS -Qunused-arguments" \
+    CPPFLAGS="$CPPFLAGS -Qunused-arguments" \
+    ./configure \
+        --build=$CBUILD \
+        --host=$CHOST \
+        --prefix=/usr \
+        --disable-dependency-tracking \
+        --with-pic \
+        --with-optimization=0 \
+        --with-cpu=i386_fpu \
+        --with-audio="alsa"
+    make
+}
+
+check() {
+    make check
+}
+
+package() {
+    # Installation is not parallel friendly and will fail
+    # sometimes
+    make -j1 DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+509841e296dabf6039b5301e8160fcea37f13963d7bedf12082d2ce0d3bd14229fd906cb899eea2be9942fb994d9e1e4f00c757ca96f4ca7d5a14469cf13b91d  mpg123-1.33.3.tar.bz2
+6173e970d35bc8f2877c784fca1164a1fec0b3f3795a12e8b035d97a4214acd1569d170bc3cb3dd0c1f4b7c198e033e1a3ecf1966bce3067bc7bd4632d7e574f  001-add-missing-headers.patch
+"

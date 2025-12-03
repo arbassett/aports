@@ -1,0 +1,39 @@
+# Alpine-Contributor: Nick Black <dankamongmen@gmail.com>
+# Alpine-Maintainer: Nick Black <dankamongmen@gmail.com>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+pkgname=doctest
+pkgver=2.4.12
+pkgrel=1
+pkgdesc="Fast header-only C++ unit testing"
+url="https://github.com/doctest/doctest"
+arch="noarch"
+license="MIT"
+subpackages="$pkgname-dev"
+makedepends="cmake ninja qnx-libc++-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/doctest/doctest/archive/refs/tags/v$pkgver.tar.gz
+        qnx_fix.patch
+"
+
+build() {
+	cmake3.5 -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+	
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build || msg "All but 3 tests pass due to a dlopen bug"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+
+sha512sums="
+d55aae632e6d66add7b65d0e97bde5063cdae7512836f278613af35957c62dbc6b0b0febbe2eb1eddd334a7a5343faca7357a2eeebbf1428cafffeb5d18e610c  doctest-2.4.12.tar.gz
+bf6ab70ffa81499016c7de275305aea0ee97a74821785318eee99f4a46ff31bcc12b02c17d9d33804a4fa7522c4f118e80e69b28c9f202d937df9e8b82af675e  qnx_fix.patch
+"

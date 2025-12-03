@@ -1,0 +1,204 @@
+# Alpine-Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Alpine-Contributor: Sergei Lukin <sergej.lukin@gmail.com>
+# Alpine-Contributor: Jiri Horner <laeqten@gmail.com>
+# Alpine-Maintainer: Patrycja Rosa <alpine@ptrcnull.me>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=webkit2gtk-4.1
+pkgver=2.51.1
+pkgrel=3
+pkgdesc="Portable web rendering engine WebKit for GTK+ - GTK+3 libsoup3 version"
+url="https://webkitgtk.org/"
+arch="all"
+license="LGPL-2.0-or-later AND BSD-2-Clause"
+depends="at-spi2-core-libs
+        cairo
+        cairo-gobject
+        enchant-libs
+        ffmpeg-libs
+        gdk-pixbuf
+        gdk-pixbuf-loaders
+        glib
+        gnutls
+        gstreamer
+        gst-libav
+        gst-plugins-base
+        gst-plugins-good
+        gtk3
+        harfbuzz-icu
+        hyphen
+        icu-libs
+        lcms2
+        libavif
+        libavif-pixbuf-loader
+        libc++
+        libepoxy
+        libgcrypt
+        libgpg-error
+        libsecret
+        libsoup3
+        libtasn1
+        libxslt
+        libwebpdemux
+        libwoff2dec
+        openjpeg
+        sqlite-libs
+        qnx-io-sock
+        qnx-libgbm
+        qnx-libdrm
+        "
+makedepends="
+    at-spi2-core-dev
+    aom-dev
+    bison
+    clang
+    cmake
+    dav1d-dev
+    enchant-dev
+    ffmpeg-dev
+    flex
+    gdk-pixbuf-dev
+    gnutls-dev
+    gobject-introspection-dev
+    gperf
+    gst-libav
+    gst-plugins-base-dev
+    gstreamer-dev
+    gtk3-dev
+    harfbuzz-dev
+    hyphen-dev
+    icu-dev
+    lcms2-dev
+    libavif-dev
+    libc++-dev
+    libgcrypt-dev
+    libjpeg-turbo-dev
+    libpng-dev
+    libsecret-dev
+    libsoup3-dev
+    libtasn1-dev
+    libwebp-dev
+    libxml2-dev
+    libxslt-dev
+    llvm
+    openjpeg-dev
+    pango-dev
+    python3
+    ruby-dev
+    ninja
+    sqlite-dev
+    unifdef
+    wayland-dev
+    woff2-dev
+    libjxl-dev
+    qnx-io-sock-dev
+    qnx-libdrm-dev
+    qnx-libgbm-dev
+    "
+options="!check" # upstream doesn't package them in release tarballs: Tools/Scripts/run-gtk-tests: Command not found
+subpackages="$pkgname-lang $pkgname-dev $pkgname-dbg"
+source="https://webkitgtk.org/releases/webkitgtk-$pkgver.tar.xz
+        001-add_mcontext_support.patch
+        002-add-exe-path-support.patch
+        004-disable-girscanner-warn-all.patch
+        005-add-unix-mem-pressure-file.patch
+        006-fix-EGLNativeDisplayType-is-ull.patch
+        007-supress-libc-usage-warn.patch
+        008-fix-platform-codes.patch
+    "
+builddir="$srcdir/webkitgtk-$pkgver"
+
+build() {
+    export CC=clang
+    export CXX=clang++
+    export AR=llvm-ar
+    export NM=llvm-nm
+    export RANLIB=llvm-ranlib
+
+    # Manually specify linker flags
+    export LDFLAGS="-lsocket"
+    
+    # QNX names madvise differently
+    _madv_defs="-DMADV_DISCARD_NP=POSIX_MADV_DISCARD_NP \
+                -DMADV_DONTNEED=POSIX_MADV_DONTNEED \
+                -DMADV_NORMAL=POSIX_MADV_NORMAL \
+                -DMADV_RANDOM=POSIX_MADV_RANDOM \
+                -DMADV_SEQUENTIAL=POSIX_MADV_SEQUENTIAL \
+                -DMADV_WILLNEED=POSIX_MADV_WILLNEED \
+                -Dmadvise=posix_madvise"
+    
+    _dbg_flags="-g1"
+
+    # Do not build with debug symbols
+    export CFLAGS="$CFLAGS $_madv_defs $_dbg_flags"
+    export CXXFLAGS="$CXXFLAGS $_madv_defs $_dbg_flags"
+
+    # supress some warnings
+    _no_warns="-U_FORTIFY_SOURCE \
+               -Wno-character-conversion \
+               -Wno-unnecessary-virtual-specifier \
+               -Wno-int-to-void-pointer-cast"
+
+    _ext_flags="-DDEFAULT_THREAD_STACK_SIZE_IN_KB=1024 \
+                -DFIXED_EXECUTABLE_MEMORY_POOL_SIZE_IN_MB=64"
+
+    export CFALGS="$CFLAGS $_no_warns $_ext_flags"
+    export CXXFLAGS="$CXXFLAGS $_no_warns $_ext_flags"
+
+    _gtk_options="-DUSE_GTK4=OFF
+        -DUSE_LIBBACKTRACE=OFF
+        -DENABLE_GAMEPAD=OFF
+        -DUSE_GBM=ON
+        -DUSE_FLITE=OFF
+        -DENABLE_QUARTZ_TARGET=OFF
+        -DUSE_LIBBACKTRACE=OFF
+        -DENABLE_X11_TARGET=OFF
+        -DUSE_SYSPROF_CAPTURE=OFF
+        "
+
+    _jit="-DENABLE_JIT=ON
+        -DENABLE_WEBASSEMBLY=ON
+        -DENABLE_C_LOOP=OFF
+        "
+
+    _libcxx="-DUSE_CXX_STDLIB_ASSERTIONS=OFF"
+
+    cmake -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DPORT=GTK \
+        -DCMAKE_SKIP_RPATH=ON \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DENABLE_DOCUMENTATION=OFF \
+        -DENABLE_JOURNALD_LOG=OFF \
+        -DENABLE_MINIBROWSER=ON \
+        -DENABLE_SAMPLING_PROFILER=OFF \
+        -DENABLE_SPELLCHECK=ON \
+        -DENABLE_SPEECH_SYNTHESIS=OFF \
+        -DENABLE_WEBGL=OFF \
+        -DUSE_SYSTEM_MALLOC=ON \
+        $_gtk_options \
+        $_jit \
+        $_libcxx
+
+    ninja -C build -j$(nproc)
+}
+
+check() {
+    ninja -C build check
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+    mv "$pkgdir"/usr/bin/WebKitWebDriver "$pkgdir"/usr/bin/WebKitWebDriver-4.1
+}
+
+sha512sums="
+64b9e6142d6329b307bcce832df24ad3b0e559d0ed66a71f8724043002b7570f930a5016c7c00336320206ffc5b8ad1d09496f5b1ddb9097b4a1022d4a4665ab  webkitgtk-2.51.1.tar.xz
+416535173edee1366db8718abcdf2e75e6e68a189ed9a07390c424b21a4cfd4998cd010d144056bd26153b677f0b8372deebe243fdbe916607f24dabbcafbe93  001-add_mcontext_support.patch
+b131708368eeff15e9139a9401e208604945cbc8abe92d2327a18692a44fb9051e6a0b4cb13439d2f882225215e1a6c437673d65b8c58f940f4eea5f90e2e3d8  002-add-exe-path-support.patch
+fc494940ed4156e68246da3e73cfc6ff109a9bd84c584ecc061a9a5f20f71afbfd1157b9cbcc5ed13af574aa44bd83c58abf175089904dff3f7b46a813164387  004-disable-girscanner-warn-all.patch
+f3a79e8f2bff30e2b3c28037e8ea75fcae5067841d043ed9508253c05da6b322cd641220492156733f9ce11d5fdc98d53532b5a9877fcc54dd5459bb4f6a0d03  005-add-unix-mem-pressure-file.patch
+dd211ba8d178fb434e4e347351c83cba7710cb0ec3fa25f64f54ab4fb8faf0d4b7ac90fbdf9c5c4a63760d4701fc74174e340126e6aa0698e09870f8778a0934  006-fix-EGLNativeDisplayType-is-ull.patch
+a1c6e6b20ba1838e54def8eb56c6b567c7862d45d5e488da4c747201c58d29edbc427d9eab4416c71a1a1bdb311bdf5f5ebe467e1d21968db09cc03886478ae8  007-supress-libc-usage-warn.patch
+27db2f0072535a1b6219db87a69550a0b56964295457e7bfd8bf78fb090a1d41d1ad7f3e399c40fc16430167341a55add0c7f37c8dd1bfd39893b77058000913  008-fix-platform-codes.patch
+"

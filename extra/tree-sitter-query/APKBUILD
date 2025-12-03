@@ -1,0 +1,34 @@
+# Alpine-Maintainer: John Vogel <jvogel@stygian.me>
+# Maintainer Aaron Bassett <abassett@qnx.com>
+pkgname=tree-sitter-query
+pkgver=0.7.0
+pkgrel=2
+pkgdesc="A tree-sitter parser for tree-sitter query files (scheme-like)"
+url="https://github.com/tree-sitter-grammars/tree-sitter-query/"
+arch="all"
+license="Apache-2.0"
+makedepends="tree-sitter-dev"
+checkdepends="tree-sitter-cli"
+subpackages="$pkgname-doc"
+install_if="tree-sitter-grammars"
+source="https://github.com/tree-sitter-grammars/tree-sitter-query/archive/v$pkgver/tree-sitter-query-$pkgver.tar.gz"
+options="!check" # Needs nodejs and rust
+
+build() {
+	abuild-tree-sitter build
+}
+
+check() {
+	HOME="$srcdir" tree-sitter test
+}
+
+package() {
+	DESTDIR="$pkgdir" abuild-tree-sitter install -q queries/query
+	install -Dm644 README.md -t "$pkgdir"/usr/share/doc/"$pkgname"
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/"$pkgname"
+}
+
+sha512sums="
+e30d74ddf05b9f241691598acc5b029f971c879dee18d79022cf45dddbeeabe4b0460e00382eba6b39f5b242c225ebb475ba9f460c6c9ecb5189dd7925f20f04  tree-sitter-query-0.7.0.tar.gz
+"
+

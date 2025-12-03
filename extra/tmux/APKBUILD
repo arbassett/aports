@@ -1,0 +1,53 @@
+# Maintainer: Leo Shen <yishen@qnx.com>
+# Alpine-Maintainer: Celeste <cielesti@protonmail.com>
+maintainer="Celeste <cielesti@protonmail.com>"
+pkgname=tmux
+pkgver=3.5a
+pkgrel=1
+pkgdesc="Tool to control multiple terminals from a single terminal"
+url="https://tmux.github.io"
+arch="all"
+license="ISC"
+depends="ncurses-terminfo-base"
+depends="libevent ncurses"
+makedepends="bison texinfo libevent-dev ncurses-dev"
+subpackages="$pkgname-doc"
+source="https://github.com/tmux/tmux/releases/download/$pkgver/tmux-$pkgver.tar.gz
+    qnx-compat.patch
+"
+
+prepare() {
+    default_prepare
+    update_config_sub
+}
+
+build() {
+    CFLAGS="$CFLAGS -flto=auto -Wl,-lsocket,-lregex" \
+    ./configure \
+        --build=$CBUILD \
+        --host=$CHOST \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --mandir=/usr/share/man \
+        --localstatedir=/var \
+        --enable-sixel
+    make
+}
+
+check() {
+    make check
+}
+
+package() {
+    make DESTDIR="$pkgdir" install
+
+    install -D -m644 example_tmux.conf \
+        "$pkgdir"/usr/share/doc/$pkgname/examples/$pkgname.conf
+    install -Dm644 CHANGES README -t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+
+sha512sums="
+2383e99aec2dcdb1d899793d5ecab40a68b921194f84770d3f4d19712bfc85590657a99d2a9a7bec36d4ba5ab39fa713f13937b0acad3b61cd9b2302dba61d43  tmux-3.5a.tar.gz
+2f8b54e8ee7e8fe0d73eb7f5b134ae0b956454ad0b5a528d87f3431a94fcbaf3fc0b0bdd72e435149a9da5b53857a3ef0e2a92838724876adc85bc2ccb5e66eb  qnx-compat.patch
+"

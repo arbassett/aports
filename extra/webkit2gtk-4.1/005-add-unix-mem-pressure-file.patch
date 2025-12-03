@@ -1,0 +1,17 @@
+diff --git a/Source/WTF/wtf/PlatformGTK.cmake b/Source/WTF/wtf/PlatformGTK.cmake
+index d2970fbe..3d21cd16 100644
+--- a/Source/WTF/wtf/PlatformGTK.cmake
++++ b/Source/WTF/wtf/PlatformGTK.cmake
+@@ -69,6 +69,12 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+ 
+         unix/MemoryPressureHandlerUnix.cpp
+     )
++elseif (CMAKE_SYSTEM_NAME MATCHES "QNX")
++    list(APPEND WTF_SOURCES
++        generic/MemoryFootprintGeneric.cpp
++
++        unix/MemoryPressureHandlerUnix.cpp
++    )
+ else ()
+     list(APPEND WTF_SOURCES
+         generic/MemoryFootprintGeneric.cpp

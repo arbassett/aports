@@ -1,0 +1,64 @@
+From 08b6a813ac86a4ccd8357c6e71127effe0a74863 Mon Sep 17 00:00:00 2001
+From: Yongxin Dai <yodai@qnx.com>
+Date: Fri, 14 Nov 2025 15:03:29 -0500
+Subject: [PATCH] set _XOPEN_SOURCE a vlaue and link libsocket
+
+
+  39.0% gck/
+  55.3% gcr/
+   5.5% ui/
+diff --git a/gck/meson.build b/gck/meson.build
+index a21a1e9..e4f4bcc 100644
+--- a/gck/meson.build
++++ b/gck/meson.build
+@@ -77,7 +77,7 @@ gck_cflags = [
+   '-DGCK_API_SUBJECT_TO_CHANGE',
+   '-DP11_KIT_API_SUBJECT_TO_CHANGE',
+   '-DPKCS11_REGISTRY_DIR="@0@"'.format(get_option('prefix') / get_option('libdir') / 'pkcs11'),
+-  '-D_XOPEN_SOURCE',   # Needed for strptime()
++  '-D_XOPEN_SOURCE=700',   # Needed for strptime()
+   '-D_DEFAULT_SOURCE', # Needed for timegm
+ ]
+ 
+diff --git a/gcr/meson.build b/gcr/meson.build
+index c83641b..c90e774 100644
+--- a/gcr/meson.build
++++ b/gcr/meson.build
+@@ -146,12 +146,13 @@ gcr_base_cflags = [
+   '-DGCR_API_SUBJECT_TO_CHANGE',
+   '-DGCK_API_SUBJECT_TO_CHANGE',
+   '-DP11_KIT_API_SUBJECT_TO_CHANGE',
+-  '-D_XOPEN_SOURCE',   # Needed for strptime()
++  '-D_XOPEN_SOURCE=700',   # Needed for strptime()
+ ]
+ 
+ gcr_base_symbolmap = meson.current_source_dir() / 'libgcr-base.map'
+ gcr_base_linkflags = cc.get_supported_link_arguments(
+   '-Wl,--version-script,@0@'.format(gcr_base_symbolmap),
++  '-lsocket',
+ )
+ 
+ gcr_base_lib = shared_library('gcr-base-@0@'.format(gcr_major_version),
+@@ -234,6 +235,7 @@ gcr_ssh_askpass = executable('gcr-ssh-askpass',
+     '-DGCR_COMPILATION',
+   ],
+   include_directories: config_h_dir,
++  link_args: ['-lsocket'],
+   install: true,
+   install_dir: get_option('libexecdir'),
+ )
+diff --git a/ui/meson.build b/ui/meson.build
+index 32ee057..dbcfd07 100644
+--- a/ui/meson.build
++++ b/ui/meson.build
+@@ -97,6 +97,7 @@ gcr_ui_cflags = [
+ gcr_ui_symbolmap = meson.current_source_dir() / 'libgcr-ui.map'
+ gcr_ui_linkflags = cc.get_supported_link_arguments(
+   '-Wl,--version-script,@0@'.format(gcr_ui_symbolmap),
++  '-lsocket',
+ )
+ 
+ # gcr-XX is just the same as gcr-ui-XX
+-- 
+2.51.2
+

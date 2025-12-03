@@ -1,0 +1,84 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+# QNX Maintainer: Felix Xing <fxing@qnx.com>
+
+pkgname=libheif
+pkgver=1.20.2
+pkgrel=0
+pkgdesc="ISO/IEC 23008-12:2017 HEIF file format decoder and encoder"
+url="https://github.com/strukturag/libheif"
+arch="all"
+license="LGPL-3.0-or-later"
+depends="libc++ aom-libs libjpeg-turbo libsharpyuv"
+makedepends="
+    aom-dev
+    cmake
+    libjpeg-turbo-dev
+    libpng-dev
+    gdk-pixbuf-dev
+    ninja
+    clang
+    libc++-dev
+    "
+subpackages="
+    $pkgname-dev
+    heif-thumbnailer
+    $pkgname-tools
+    $pkgname-doc
+    $pkgname-pixbuf-loader
+    "
+source="https://github.com/strukturag/libheif/releases/download/v$pkgver/libheif-$pkgver.tar.gz"
+
+build() {
+    # This is en/decoder, so performance matters more than size.
+    export CFLAGS="${CFLAGS/-Os/-O2}"
+    export CXXFLAGS="${CXXFLAGS/-Os/-O2}"
+
+    cmake -B build -G Ninja \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=None \
+        -DWITH_DAV1D=ON \
+        -DWITH_JPEG_DECODER=ON \
+        -DWITH_JPEG_ENCODER=ON \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON
+    cmake --build build
+}
+
+check() {
+    ctest --test-dir build
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}
+
+thumbnailer() {
+    pkgdesc="$pkgdesc (thumbnailer)"
+    depends="libc++ aom-libs libjpeg-turbo libpng tiff zlib"
+
+    amove usr/bin/heif-thumbnailer
+}
+
+tools() {
+    pkgdesc="$pkgdesc (tools)"
+    depends="heif-thumbnailer=$pkgver-r$pkgrel"
+
+    amove usr/bin
+}
+
+loader() {
+    pkgdesc="$pkgdesc (pixbuf loader)"
+    depends="heif-thumbnailer=$pkgver-r$pkgrel"
+    install_if="$pkgname=$pkgver-r$pkgrel gdk-pixbuf-loaders"
+
+    amove \
+        usr/lib/gdk-pixbuf-*/*/loaders \
+        usr/share/thumbnailers
+}
+
+sha512sums="
+0ab8669d2ee1ed619c89cbe3fa3a7618c25d26a7e4c65801dd4db163d4a584fde13b32ed0996461e81bd42ed4def8f4eb7b296b15b7819e90c0a7d5a8c08b06b  libheif-1.20.2.tar.gz
+"

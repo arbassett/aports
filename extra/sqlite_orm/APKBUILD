@@ -1,0 +1,34 @@
+# Maintainer: Felix Lionardo <flionardo@qnx.com>
+pkgname=sqlite_orm
+pkgver=1.9
+pkgrel=0
+pkgdesc="light header only library for modern C++ to interact with sqlite"
+arch="all"
+license="AGPL-3.0"
+url="https://github.com/fnc12/sqlite_orm"
+makedepends="qnx-base-dev sqlite-static sqlite-dev cmake ninja"
+depends=""
+subpackages="${pkgname}-dev"
+source="${pkgname}-${pkgver}.tar.gz::https://github.com/fnc12/sqlite_orm/archive/refs/tags/v${pkgver}.tar.gz"
+
+build() {
+    cmake_args="-DCMAKE_INSTALL_PREFIX=${PREFIX} \
+                -DCMAKE_STAGING_PREFIX=${PREFIX} \
+                -DCMAKE_BUILD_TYPE=Release \
+                "
+
+    BUILD_ROOT=${CBUILDROOT} \
+    cmake ${cmake_args} -G Ninja
+    ninja
+}
+
+check() {
+    ctest --verbose
+}
+
+package() {
+    DESTDIR="$pkgdir" ninja install
+}
+sha512sums="
+a9a31b534d9374364672d698a1d08ba3d0b2c06d91a3fc38c3fcf73eb2efc272f118bb05c5b4ea720ceac01f54ee02debd86de31cad645001ed2b8db943ebe33  sqlite_orm-1.9.tar.gz
+"

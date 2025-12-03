@@ -1,0 +1,38 @@
+pkgname=scdoc
+pkgver=1.11.3
+pkgrel=0
+pkgdesc="Simple man page generator written for POSIX systems written in C99"
+url="https://git.sr.ht/~sircmpwn/scdoc"
+license="MIT"
+arch="all"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~sircmpwn/scdoc/archive/$pkgver.tar.gz
+ww.host_patch"
+options="!check"
+
+build() {
+    if [[ $CBUILD = $CHOST ]]; then
+        # Compile natively
+        echo "No additional arguments are required"
+    else
+        # Cross compiling
+        echo "Special patch"
+        patch -p1 -i ../ww.host_patch
+    fi
+
+    make PREFIX=/usr
+}
+
+check() {
+    make check
+}
+
+package() {
+    make DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+
+sha512sums="
+fbecc505b44c396890c53c05183d34336160dbd02993ee120421fc6e2a3ec78ba349747e8acfe97af956a0081c923309290ff97fb7babafbc3ca8addc9ec92f9  scdoc-1.11.3.tar.gz
+d341884476d858bd08c55528103248efc29d420e3263cb80e4f8409657683b036059c3db0844ba65d49da6cc31208d7a64a90b8a2cfbd6ba30c16ee91a6b27ac  ww.host_patch
+"

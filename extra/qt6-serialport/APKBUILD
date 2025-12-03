@@ -1,0 +1,71 @@
+# Alpine-Maintainer: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Felix Xing <fxing@qnx.com>
+pkgname=qt6-serialport
+pkgver=6.10.0
+pkgrel=0
+pkgdesc="Provides access to hardware and virtual serial ports"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends="libc++
+         qnx-io-sock
+         qt6-base
+        "
+depends_dev="
+    qt6-base-dev
+    qt6-base-private-dev
+    "
+makedepends="$depends_dev
+    cmake
+    perl
+    ninja
+    "
+subpackages="$pkgname-dev"
+source="https://download.qt.io/official_releases/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtserialport-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No usable tests
+builddir="$srcdir/qtserialport-everywhere-src-${pkgver/_/-}"
+
+build() {
+    # It's qcc here, but compiled with clang on the selfhosted system
+    if [[ $CARCH == "x86_64" ]]; then
+        _triplet="qnx-x86-64-qcc"
+    elif [[ $CARCH == "aarch64" ]]; then
+        _triplet="qnx-aarch64le-qcc"
+    else
+        die "$CARCH not supported"
+    fi
+
+    _warn="-Wno-character-conversion"
+
+    export CC=clang
+    export CXX=clang++
+    export CFLAGS="$_warn"
+    export CXXFLAGS="$_warn"
+    export LDFLAGS="-lsocket"
+    export LD_LIBRARY_PATH="$builddir/build/lib:$LD_LIBRARY_PATH"
+
+    cmake -B build -G Ninja \
+        -DCMAKE_SKIP_RPATH=ON \
+        -DQT_QMAKE_TARGET_MKSPEC=$_triplet \
+        -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_MESSAGE_LOG_LEVEL=STATUS \
+        -DFEATURE_pkg_config=ON
+
+    cmake --build build --parallel
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+    default_dev
+
+    amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+46b1aa80d25984d209dea1ca9db2a36c90078e76b8a0738af7a5eb6b0cc3616dfe66717b0d2d12b73b0ad750c23dab09e7fabfc56b9648c82a94c34e11016455  qtserialport-everywhere-src-6.10.0.tar.xz
+"
