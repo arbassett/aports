@@ -1,0 +1,46 @@
+diff --git a/Source/WTF/Scripts/Preferences/UnifiedWebPreferences.yaml b/Source/WTF/Scripts/Preferences/UnifiedWebPreferences.yaml
+index 64fd77092179..c90a6289af17 100644
+--- a/Source/WTF/Scripts/Preferences/UnifiedWebPreferences.yaml
++++ b/Source/WTF/Scripts/Preferences/UnifiedWebPreferences.yaml
+@@ -2155,11 +2155,11 @@ CrossDocumentViewTransitionsEnabled:
+   humanReadableDescription: "Enable support for view-transitions cross-document"
+   defaultValue:
+     WebKitLegacy:
+-      default: true
++      default: false
+     WebKit:
+-      default: true
++      default: false
+     WebCore:
+-      default: true
++      default: false
+ 
+ CrossOriginEmbedderPolicyEnabled:
+   type: bool
+@@ -8934,11 +8934,11 @@ ViewTransitionsEnabled:
+   humanReadableDescription: "Enable the View Transitions API"
+   defaultValue:
+     WebKitLegacy:
+-      default: true
++      default: false
+     WebKit:
+-      default: true
++      default: false
+     WebCore:
+-      default: true
++      default: false
+ 
+ VisibleDebugOverlayRegions:
+   type: uint32_t
+@@ -9338,9 +9338,9 @@ WebGLEnabled:
+   humanReadableDescription: "Enable WebGL"
+   defaultValue:
+     WebKitLegacy:
+-      default: true
++      default: false
+     WebKit:
+-      default: true
++      default: false
+     WebCore:
+       default: false
+   disableInLockdownMode: true

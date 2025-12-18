@@ -15,7 +15,7 @@ source="https://github.com/webmproject/libvpx/archive/v$pkgver/libvpx-v$pkgver.t
 build() {
     # instricts
     if [[ $CARCH == "x86_64" ]]; then
-        _simd="--enable-avx2"
+        _simd=""
     elif [[ $CARCH == "aarch64" ]]; then
         _simd="--enable-neon"
     else

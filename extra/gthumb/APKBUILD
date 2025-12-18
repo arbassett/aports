@@ -1,0 +1,99 @@
+# Alpine-Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Alpine-Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Roberto Speranza <rsperanza@qnx.com>
+pkgname=gthumb
+pkgver=3.12.8.2
+pkgrel=0
+pkgdesc="Image viewer and browser from GNOME"
+url="https://gitlab.gnome.org/GNOME/gthumb"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+    cairo
+    cairo-gobject
+    exiv2-libs
+    gdk-pixbuf
+    glib
+    gst-plugins-base
+    gstreamer
+    gtk3
+    hicolor-icon-theme
+    lcms2
+    libc++
+    libintl
+    libjpeg-turbo
+    libjxl
+    libpng
+    libwebp
+    libwebpdemux
+    pango
+    tiff
+    zlib-ng
+    "
+makedepends="
+    bison
+    exiv2-dev
+    flex
+    gsettings-desktop-schemas-dev
+    gstreamer-dev
+    gst-plugins-base-dev
+    gtk3-dev
+    itstool
+    json-glib-dev
+    lcms2-dev
+    libjpeg-turbo-dev
+    libjpeg-turbo-utils
+    libheif-dev
+    libjxl-dev
+    libpng-dev
+    libsecret-dev
+    libsoup-dev
+    meson
+    webkit2gtk-4.1-dev
+    "
+subpackages="
+    $pkgname-dev
+    $pkgname-doc
+    $pkgname-lang
+    "
+options="!check"
+source="https://gitlab.gnome.org/GNOME/gthumb/-/archive/$pkgver/gthumb-$pkgver.tar.gz
+        001-fix-time_t-type.patch
+        002-fix-xopen-source.patch
+        "
+
+build() {
+    CC=clang \
+    CXX=clang++ \
+    abuild-meson \
+        -Dwarn-deprecated=false \
+        -Dclutter=false \
+        -Dgstreamer=true \
+        -Dlibchamplain=false \
+        -Dlcms2=true \
+        -Dcolord=true \
+        -Dlibtiff=true \
+        -Dlibwebp=true \
+        -Dlibjxl=true \
+        -Dlibheif=true \
+        -Dlibraw=false \
+        -Dlibrsvg=false \
+        -Dlibbrasero=false \
+        . output
+    meson compile -C output
+}
+
+check() {
+    meson test --print-errorlogs -C output \
+      || msg "glib-utils tests failed due to abort"
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+54026d6a0ce0f659f47b78eeb7b64c6590a041d5b47b664f22558e5d0a5e4012739a8d46eda0c3808a46afb339108cd5ae4aa67459a12dde759871d34cba0d2f  gthumb-3.12.8.2.tar.gz
+116686f96317e04063220cb35ce47120e8ae52d7da2e7d4aae3b292ff26a038638b3cd1432f721f4c9590678ac573b99a77176e1fc75163cd5ed2b0c243f3414  001-fix-time_t-type.patch
+b952e62947ece007f4697a6e16e93b39e86ff38861992ffaf0fdea127febd4f104f14a43f0804350a64623316f995c6983ac4a38df17823d9c8680c659dcb6c6  002-fix-xopen-source.patch
+"

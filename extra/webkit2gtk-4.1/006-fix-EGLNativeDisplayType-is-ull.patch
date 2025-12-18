@@ -27,3 +27,29 @@ index cbe012fb..c2f61278 100644
  
      if (m_glDisplay) {
          m_glDisplayOwned = true;
+diff --git a/Source/WebCore/platform/graphics/egl/PlatformDisplayDefault.cpp b/Source/WebCore/platform/graphics/egl/PlatformDisplayDefault.cpp
+index 8645984cee8b..61aaff1dc3f4 100644
+--- a/Source/WebCore/platform/graphics/egl/PlatformDisplayDefault.cpp
++++ b/Source/WebCore/platform/graphics/egl/PlatformDisplayDefault.cpp
+@@ -49,7 +49,7 @@ PlatformDisplayDefault::PlatformDisplayDefault(Ref<GLDisplay>&& glDisplay)
+ {
+ #if ENABLE(WEBGL)
+     m_anglePlatform = 0;
+-    m_angleNativeDisplay = EGL_DEFAULT_DISPLAY;
++    m_angleNativeDisplay = reinterpret_cast<void*>(EGL_DEFAULT_DISPLAY);
+ #endif
+ }
+ 
+diff --git a/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp b/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
+index 27e4b960d42b..12edf932ec11 100644
+--- a/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
++++ b/Source/WebCore/platform/graphics/egl/PlatformDisplaySurfaceless.cpp
+@@ -56,7 +56,7 @@ PlatformDisplaySurfaceless::PlatformDisplaySurfaceless(Ref<GLDisplay>&& glDispla
+ {
+ #if ENABLE(WEBGL)
+     m_anglePlatform = EGL_PLATFORM_SURFACELESS_MESA;
+-    m_angleNativeDisplay = EGL_DEFAULT_DISPLAY;
++    m_angleNativeDisplay = reinterpret_cast<void*>(EGL_DEFAULT_DISPLAY);
+ #endif
+ }
+ 

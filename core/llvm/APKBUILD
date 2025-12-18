@@ -1,14 +1,38 @@
 # Maintainer: Felix Xing <fxing@qnx.com>
 pkgname=llvm
 pkgver=21.1.3
-pkgrel=4
+pkgrel=5
 _git_rev=3
 pkgdesc="Low Level Virtual Machine compiler system."
 arch="all"
 url="https://llvm.org/"
 license="Apache-2.0"
-depends="qnx-io-sock libffi zlib zstd libxml2 lz4-libs libcurl"
-makedepends="python3 sed cmake ninja perl qnx-io-sock-dev libffi-dev zlib-dev zstd-dev libxml2-dev lz4-dev curl-dev liblocale-shim-dev qnx-libc++-dev"
+depends="
+    qnx-io-sock
+    qnx-gcc
+    binutils
+    libffi
+    zlib
+    zstd
+    libxml2
+    lz4-libs
+    libcurl
+    "
+makedepends="
+    python3
+    sed
+    cmake
+    ninja
+    perl
+    qnx-io-sock-dev
+    libffi-dev
+    zlib-dev
+    zstd-dev
+    libxml2-dev
+    lz4-dev
+    curl-dev
+    liblocale-shim-dev
+    "
 source="https://github.com/qnx-ports/llvm-project/archive/refs/tags/qnx-$pkgver-r$_git_rev.tar.gz
         libcxx.clang.cfg
         llvm.clang.cfg"
@@ -34,14 +58,6 @@ subpackages="libc++:_libcxx
 builddir="$srcdir/llvm-project-qnx-$pkgver-r$_git_rev"
 
 build() {
-    _cc="gcc"
-    _cxx="g++"
-    if clang --version; then
-        _cc="clang"
-        _cxx="clang++"
-    fi
-
-
     if [[ $CARCH == "x86_64" ]]; then
         _llvm_triplet="x86_64-pc-qnx"
     elif [[ $CARCH == "aarch64" ]]; then
@@ -51,6 +67,9 @@ build() {
     fi
 
     msg "Building llvm ($_llvm_triplet)"
+
+    _cc=clang
+    _cxx=clang++
 
     _shared_args="-DCMAKE_BUILD_TYPE=Release \
                   -DCMAKE_INSTALL_DOCDIR=share/doc \
@@ -75,15 +94,6 @@ build() {
 
     # build the bootstrapping toolchain
     _bootstrap_flags=""
-    if ! [[ "$_cxx" == "clang++" ]]; then
-        _bootstrap_flags="-D_QNX_SOURCE -lsocket -lregex -lm -lgcc_s -Wl,--stack,8388608 \
-                        -Wno-deprecated-declarations \
-                        -Wno-array-bounds \
-                        -Wno-alloc-size-larger-than \
-                        -Wno-uninitialized \
-                        -Wno-unused-but-set-parameter \
-                        -Wno-unused-but-set-variable"
-    fi
 
     CC="$_cc" CXX="$_cxx" \
     cmake -B build-bootstrap -S llvm -G Ninja \
@@ -235,6 +245,49 @@ _clang() {
     # TODO: these should be python packages
     amove usr/share/scan-view
     amove usr/share/scan-build
+
+    cat > "$subpkgdir"/usr/bin/c89 <<'EOF'
+#!/bin/sh
+_flavor="-std=c89"
+for opt; do
+	case "$opt" in
+	-ansi|-std=c89|-std=iso9899:1990) _flavor="";;
+	-std=*) echo "$(basename $0) called with non ANSI/ISO C option $opt" >&2
+		exit 1;;
+	esac
+done
+exec clang -Qunused-arguments $_flavor ${1+"$@"}
+EOF
+
+    cat > "$subpkgdir"/usr/bin/c99 <<'EOF'
+#!/bin/sh
+_flavor="-std=c99"
+for opt; do
+	case "$opt" in
+	-std=c99|-std=iso9899:1999) _flavor="";;
+	-std=*) echo "$(basename $0) called with non ISO C99 option $opt" >&2
+		exit 1;;
+	esac
+done
+exec clang -Qunused-arguments $_flavor ${1+"$@"}
+EOF
+
+    cat > "$subpkgdir"/usr/bin/gcc <<'EOF'
+#!/bin/sh
+exec clang -Qunused-arguments ${1+"$@"}
+EOF
+
+    cat > "$subpkgdir"/usr/bin/g++ <<'EOF'
+#!/bin/sh
+exec clang++ -Qunused-arguments ${1+"$@"}
+EOF
+
+    ln -s clang "$subpkgdir"/usr/bin/cc
+    ln -s clang++ "$subpkgdir"/usr/bin/c++
+    chmod 0755 "$subpkgdir"/usr/bin/c89
+    chmod 0755 "$subpkgdir"/usr/bin/c99
+    chmod 0755 "$subpkgdir"/usr/bin/gcc
+    chmod 0755 "$subpkgdir"/usr/bin/g++
 }
 
 _clang_dev() {

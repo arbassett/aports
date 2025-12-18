@@ -1,7 +1,7 @@
 # Mantainer: Aaron Bassett <abassett@qnx.com>
 pkgname="meson"
-pkgver=1.9.1
-pkgrel=1
+pkgver=1.10.0
+pkgrel=0
 pkgdesc="The Meson Build System"
 url="http://mesonbuild.com/"
 arch="all"
@@ -55,6 +55,6 @@ abuild() {
 }
 
 sha512sums="
-e5a167ff035f1494d6b1df7d3bf6feb37aa6421222fd27bfbebb36de4c7c3083e327679b82b7d9d3d4a2cc4dc2a3babb7cbf03358e4a2784d47eb34502014a1c  meson-1.9.1.tar.gz
+4e6ad56e18c7d5b244b94b99c7e42489b8d4e79634abb97607c3f277f74b0c3c1cb043ba48816f444d2960fe96dc38459c404207e415a1401f5fad7c6f5d60e5  meson-1.10.0.tar.gz
 8de6d6fc7bb1bfbfdaee8b3f3d035bd2b77905e265153787523f0b9af6670adc7a1c316728134dabf93f96e08862f758514cef36fa40c2224ba391140a75acaa  abuild-meson
 "
