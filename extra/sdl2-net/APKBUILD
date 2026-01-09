@@ -1,3 +1,5 @@
+# Alpine-Contributor: Alex Raschi <raschi.alex@gmail.com>
+# Alpine-Maintainer: Clayton Craft <clayton@craftyguy.net>
 # Maintainer: Ethan Leir <eleir@qnx.com>
 pkgname=sdl2-net
 _pkgname=SDL_net
@@ -7,57 +9,50 @@ pkgdesc="A simple, cross-platform wrapper over TCP/IP sockets."
 url="https://libsdl.org/"
 arch="all"
 license="Zlib"
-depends="qnx-io-sock
+depends="
+    qnx-io-sock
     sdl3
-    sdl2-compat"
-makedepends="qnx-io-sock-dev
+    sdl2-compat
+    "
+makedepends="
+    qnx-io-sock-dev
     sdl3-dev
     sdl3-static
     sdl2-compat-dev
     sdl2-compat-static
     autoconf
     clang
-    ninja"
-subpackages="$pkgname-static $pkgname-dev"
+    ninja
+    "
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
 source="$pkgname-$pkgver.tar.gz::https://www.github.com/libsdl-org/$_pkgname/archive/refs/tags/release-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgname-release-$pkgver"
 
 options="!check"
 
 build() {
-    extra_cmake_args=""
-    if [[ $CBUILD = $CHOST ]]; then
-	# Compile natively
-	extra_cmake_args=""
-    else
-	# Cross compiling
-	extra_cmake_args="-DCMAKE_TOOLCHAIN_FILE=${CBUILDROOT}/${PREFIX}/share/qnx/qnx_toolchain.cmake"
-    fi
-
     export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE"
     export LDFLAGS="${LDFLAGS} -lsocket"
     cmake -B build-shared -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL2NET_INSTALL=ON \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL2NET_INSTALL=ON
     cmake --build build-shared
 
     cmake -B build-static -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL2NET_INSTALL=ON \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL2NET_INSTALL=ON
     cmake --build build-static
 }
 
