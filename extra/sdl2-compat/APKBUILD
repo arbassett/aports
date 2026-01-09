@@ -1,3 +1,4 @@
+# Alpine-Maintainer: Achill Gilgenast <achill@achill.org>
 # Maintainer: Ethan Leir <eleir@qnx.com>
 pkgname=sdl2-compat
 pkgver=2.32.60
@@ -6,69 +7,51 @@ pkgdesc="An SDL2 compatibility layer that uses SDL3 behind the scenes."
 url="https://libsdl.org/"
 arch="all"
 license="Zlib"
-depends="qnx-alsa
-    qnx-screen
-    qnx-egl
-    qnx-gles
-    wayland
-    libxkbcommon"
-makedepends="sdl3-dev
+depends="sdl3"
+makedepends="
+    sdl3-dev
     sdl3-static
     qnx-alsa-dev
     qnx-screen-dev
-    egl-headers
-    gles-headers
     wayland-dev
-    qnx-usb-static
     qnx-usb-dev
-    libxkbcommon-static
+    qnx-usb-static
     libxkbcommon-dev
-    autoconf
+    libxkbcommon-static
     clang
     ninja"
-subpackages="$pkgname-static $pkgname-dev"
-_git_rev=1
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
+_git_rev=2
 source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://www.github.com/qnx-ports/$pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
 builddir="$srcdir/$pkgname-qnx-release-$pkgver-r$_git_rev"
 
 build() {
-    extra_cmake_args=""
-    if [[ $CBUILD = $CHOST ]]; then
-	# Compile natively
-	extra_cmake_args=""
-    else
-	# Cross compiling
-	extra_cmake_args="-DCMAKE_TOOLCHAIN_FILE=${CBUILDROOT}/${PREFIX}/share/qnx/qnx_toolchain.cmake"
-    fi
-
     export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE"
     cmake -B build-shared -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=True \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL2COMPAT_X11=OFF \
-	-DSDL2COMPAT_INSTALL=ON \
-	-DSDL2COMPAT_STATIC=OFF \
-	-DSDL2COMPAT_TESTS=ON \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=True \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL2COMPAT_X11=OFF \
+        -DSDL2COMPAT_INSTALL=ON \
+        -DSDL2COMPAT_STATIC=OFF \
+        -DSDL2COMPAT_TESTS=ON
     cmake --build build-shared
 
     cmake -B build-static -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=False \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL2COMPAT_X11=OFF \
-	-DSDL2COMPAT_INSTALL=ON \
-	-DSDL2COMPAT_STATIC=ON \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=False \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL2COMPAT_X11=OFF \
+        -DSDL2COMPAT_INSTALL=ON \
+        -DSDL2COMPAT_STATIC=ON
     cmake --build build-static
 }
 
@@ -83,5 +66,5 @@ package() {
 }
 
 sha512sums="
-c5b304a930ef1869e3f9b9f9a984ef819f58d37fd55067d195d135bcbf5df0aa1ecdcb3f5b8bf02cb32605ffb55e27cea40d967e3a8aaab473e3287436b28c7b  sdl2-compat-2.32.60-r1.tar.gz
+42ba6b3ce6e18d35cc7c49f098bd4dd043f9f2321f036949afbd535aa373e6b69ffee177c558a8430c2938a97d417fff2cb2760d55243ccf71d3f940747106b5  sdl2-compat-2.32.60-r2.tar.gz
 "
