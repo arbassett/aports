@@ -1,3 +1,4 @@
+# Alpine-Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
 # Maintainer: Ethan Leir <eleir@qnx.com>
 pkgname=sdl3
 _pkgname=SDL
@@ -7,17 +8,20 @@ pkgdesc="Simple Directmedia Layer"
 url="https://libsdl.org/"
 arch="all"
 license="Zlib"
-depends="qnx-alsa
-    qnx-screen
-    qnx-egl
-    qnx-gles
-    wayland
-    libxkbcommon"
-makedepends="qnx-alsa-dev
+depends="
+     qnx-alsa
+     qnx-screen
+     qnx-egl
+     qnx-gles
+     wayland
+     libxkbcommon"
+makedepends="
+     qnx-alsa-dev
      qnx-screen-dev
      egl-headers
      gles-headers
      wayland-dev
+     wayland-protocols
      qnx-usb-static
      qnx-usb-dev
      libxkbcommon-static
@@ -25,54 +29,43 @@ makedepends="qnx-alsa-dev
      autoconf
      clang
      ninja"
-subpackages="$pkgname-static $pkgname-dev"
-_git_rev=1
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
+_git_rev=4
 source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://www.github.com/qnx-ports/$_pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
 builddir="$srcdir/$_pkgname-qnx-release-$pkgver-r$_git_rev"
 
 options="!check"
 
 build() {
-    extra_cmake_args=""
-    if [[ $CBUILD = $CHOST ]]; then
-	# Compile natively
-	extra_cmake_args=""
-    else
-	# Cross compiling
-	extra_cmake_args="-DCMAKE_TOOLCHAIN_FILE=${CBUILDROOT}/${PREFIX}/share/qnx/qnx_toolchain.cmake"
-    fi
-
     export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE -Wno-error=incompatible-function-pointer-types"
     cmake -B build-shared -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=True \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL_X11=0 \
-	-DSDL_WAYLAND=1 \
-	-DSDL_VIDEO=1 \
-	-DSDL_AUDIO=1 \
-	-DSDL_JOYSTICK=1 \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=True \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL_X11=0 \
+        -DSDL_WAYLAND=1 \
+        -DSDL_VIDEO=1 \
+        -DSDL_AUDIO=1 \
+        -DSDL_JOYSTICK=1
     cmake --build build-shared
 
     cmake -B build-static -G Ninja \
-	-DCMAKE_C_COMPILER=clang \
-	-DCMAKE_CXX_COMPILER=clang++ \
-	-DCMAKE_ASM_COMPILER=clang \
-	-DCMAKE_INSTALL_PREFIX=/usr \
-	-DBUILD_SHARED_LIBS=False \
-	-DCMAKE_SKIP_INSTALL_RPATH=ON \
-	-DQNX=800 \
-	-DSDL_X11=0 \
-	-DSDL_WAYLAND=1 \
-	-DSDL_VIDEO=1 \
-	-DSDL_AUDIO=1 \
-	-DSDL_JOYSTICK=1 \
-	$extra_cmake_args
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=False \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DQNX=800 \
+        -DSDL_X11=0 \
+        -DSDL_WAYLAND=1 \
+        -DSDL_VIDEO=1 \
+        -DSDL_AUDIO=1 \
+        -DSDL_JOYSTICK=1
     cmake --build build-static
 }
 
@@ -82,5 +75,5 @@ package() {
 }
 
 sha512sums="
-2b047037298b0efc892a6679d16e47a7af879ea6e43d40f4dccf3075a12f36ee63007a5fec7b33f2c710380b4f91c167290d9d0863ecb1ce502699eeb2cc6299  sdl3-3.2.28-r1.tar.gz
+5a87906d6ec8070b17b7ea2b99d10bd1e68552de043d9b4027f2de3b6e800b55303c6a91d0d9512b769e456d2a8cc72e0af6e44464e7e79d115c8131e6e2579a  sdl3-3.2.28-r4.tar.gz
 "
