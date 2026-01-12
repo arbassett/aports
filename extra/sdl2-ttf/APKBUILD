@@ -28,7 +28,6 @@ subpackages="
     $pkgname-static
     $pkgname-dev
     $pkgname-dbg
-    $pkgname-doc
     "
 _git_rev=1
 source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://github.com/qnx-ports/$_pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
