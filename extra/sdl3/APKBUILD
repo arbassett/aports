@@ -30,11 +30,9 @@ makedepends="
      clang
      ninja"
 subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
-_git_rev=4
+_git_rev=7
 source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://www.github.com/qnx-ports/$_pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
 builddir="$srcdir/$_pkgname-qnx-release-$pkgver-r$_git_rev"
-
-options="!check"
 
 build() {
     export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE -Wno-error=incompatible-function-pointer-types"
@@ -45,12 +43,12 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=True \
         -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=800 \
         -DSDL_X11=0 \
         -DSDL_WAYLAND=1 \
         -DSDL_VIDEO=1 \
         -DSDL_AUDIO=1 \
-        -DSDL_JOYSTICK=1
+        -DSDL_JOYSTICK=1 \
+        -DSDL_TESTS=1
     cmake --build build-shared
 
     cmake -B build-static -G Ninja \
@@ -60,7 +58,6 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=False \
         -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=800 \
         -DSDL_X11=0 \
         -DSDL_WAYLAND=1 \
         -DSDL_VIDEO=1 \
@@ -74,6 +71,11 @@ package() {
     DESTDIR="$pkgdir" cmake --install build-shared
 }
 
+check() {
+    # Disable SDL_strtod() failures
+    ctest --test-dir build-shared -E "(testautomation|testautomation-no-simd)"
+}
+
 sha512sums="
-5a87906d6ec8070b17b7ea2b99d10bd1e68552de043d9b4027f2de3b6e800b55303c6a91d0d9512b769e456d2a8cc72e0af6e44464e7e79d115c8131e6e2579a  sdl3-3.2.28-r4.tar.gz
+e8bc70de130b9644870853221c432128f4830ed5aafd9b658914ae02d040dcab956ddcd600ff585d6212080d55e163ce144eaf1f5d417c01cb0e700e0df49ae0  sdl3-3.2.28-r7.tar.gz
 "
