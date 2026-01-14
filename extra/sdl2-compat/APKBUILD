@@ -21,7 +21,7 @@ makedepends="
     clang
     ninja"
 subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
-_git_rev=2
+_git_rev=3
 source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://www.github.com/qnx-ports/$pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
 builddir="$srcdir/$pkgname-qnx-release-$pkgver-r$_git_rev"
 
@@ -66,5 +66,5 @@ package() {
 }
 
 sha512sums="
-42ba6b3ce6e18d35cc7c49f098bd4dd043f9f2321f036949afbd535aa373e6b69ffee177c558a8430c2938a97d417fff2cb2760d55243ccf71d3f940747106b5  sdl2-compat-2.32.60-r2.tar.gz
+7672bc072158592a8d1de8ae7c0ae0c953eab15ac937eae0a4c84307898fb39bdfde4a9adf82abd1913d48b120604d344508847a65ff9e7116b9324e84226bce  sdl2-compat-2.32.60-r3.tar.gz
 "
