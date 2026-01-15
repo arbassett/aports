@@ -19,6 +19,7 @@ makedepends="
     libxkbcommon-dev
     libxkbcommon-static
     clang
+    cmake
     ninja"
 subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
 _git_rev=3
