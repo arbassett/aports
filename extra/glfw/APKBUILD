@@ -24,6 +24,7 @@ depends="
         libxkbcommon
         wayland
         qnx-fd-notify
+        qnx-hid
 "
 
 
