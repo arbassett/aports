@@ -1,0 +1,82 @@
+# Alpine-Maintainer: Simon Zeni <simon@bl4ckb0ne.ca>
+# Maintainer: Ethan Leir <eleir@qnx.com>
+pkgname=sdl3
+_pkgname=SDL
+pkgver=3.2.28
+pkgrel=0
+pkgdesc="Simple Directmedia Layer"
+url="https://libsdl.org/"
+arch="all"
+license="Zlib"
+depends="
+     qnx-alsa
+     qnx-screen
+     qnx-egl
+     qnx-gles
+     wayland
+     libxkbcommon"
+makedepends="
+     qnx-alsa-dev
+     qnx-screen-dev
+     egl-headers
+     gles-headers
+     wayland-dev
+     wayland-protocols
+     qnx-usb-static
+     qnx-usb-dev
+     libxkbcommon-static
+     libxkbcommon-dev
+     autoconf
+     clang
+     cmake
+     ninja"
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc"
+_git_rev=7
+source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://www.github.com/qnx-ports/$_pkgname/archive/refs/tags/qnx-release-$pkgver-r$_git_rev.tar.gz"
+builddir="$srcdir/$_pkgname-qnx-release-$pkgver-r$_git_rev"
+
+build() {
+    export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE -Wno-error=incompatible-function-pointer-types"
+    cmake -B build-shared -G Ninja \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=True \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DSDL_X11=0 \
+        -DSDL_WAYLAND=1 \
+        -DSDL_VIDEO=1 \
+        -DSDL_AUDIO=1 \
+        -DSDL_JOYSTICK=1 \
+        -DSDL_TESTS=1
+    cmake --build build-shared
+
+    cmake -B build-static -G Ninja \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_ASM_COMPILER=clang \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=False \
+        -DCMAKE_SKIP_INSTALL_RPATH=ON \
+        -DSDL_X11=0 \
+        -DSDL_WAYLAND=1 \
+        -DSDL_VIDEO=1 \
+        -DSDL_AUDIO=1 \
+        -DSDL_JOYSTICK=1
+    cmake --build build-static
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build-static
+    DESTDIR="$pkgdir" cmake --install build-shared
+}
+
+check() {
+    # Disable SDL_strtod() failures
+    ctest --test-dir build-shared -E "(testautomation|testautomation-no-simd)"
+}
+
+sha512sums="
+e8bc70de130b9644870853221c432128f4830ed5aafd9b658914ae02d040dcab956ddcd600ff585d6212080d55e163ce144eaf1f5d417c01cb0e700e0df49ae0  sdl3-3.2.28-r7.tar.gz
+"
