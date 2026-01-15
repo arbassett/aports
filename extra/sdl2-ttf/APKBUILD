@@ -10,7 +10,6 @@ url="https://libsdl.org/"
 arch="all"
 license="Zlib"
 depends="
-    sdl3
     sdl2-compat
     "
 makedepends="
@@ -40,22 +39,16 @@ build() {
     CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG" \
     cmake -B build-shared -G Ninja \
         -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-        -DCMAKE_ASM_COMPILER=clang \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=True \
-        -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=ON
+        -DCMAKE_SKIP_INSTALL_RPATH=ON
     cmake --build build-shared
 
     cmake -B build-static -G Ninja \
         -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-        -DCMAKE_ASM_COMPILER=clang \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=False \
-        -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=ON
+        -DCMAKE_SKIP_INSTALL_RPATH=ON
     cmake --build build-static
 }
 
