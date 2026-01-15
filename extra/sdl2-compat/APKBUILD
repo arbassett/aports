@@ -30,12 +30,9 @@ build() {
     export CPPFLAGS="${CPPFLAGS} -D_QNX_SOURCE"
     cmake -B build-shared -G Ninja \
         -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-        -DCMAKE_ASM_COMPILER=clang \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=True \
         -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=800 \
         -DSDL2COMPAT_X11=OFF \
         -DSDL2COMPAT_INSTALL=ON \
         -DSDL2COMPAT_STATIC=OFF \
@@ -44,12 +41,9 @@ build() {
 
     cmake -B build-static -G Ninja \
         -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-        -DCMAKE_ASM_COMPILER=clang \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DBUILD_SHARED_LIBS=False \
         -DCMAKE_SKIP_INSTALL_RPATH=ON \
-        -DQNX=800 \
         -DSDL2COMPAT_X11=OFF \
         -DSDL2COMPAT_INSTALL=ON \
         -DSDL2COMPAT_STATIC=ON
