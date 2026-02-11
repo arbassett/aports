@@ -9,7 +9,7 @@ _commit=179765e80ebde71594b0e14cc6d6a506d911699a
 pkgdesc="The DNSSEC root key(s)"
 url="https://www.iana.org/dnssec/"
 arch="noarch"
-license="Public-Domain"
+license="LicenseRef-scancode-public-domain"
 makedepends="python3 openssl"
 source="$pkgname-$pkgver.tar.gz::https://github.com/iana-org/get-trust-anchor/archive/$_commit.tar.gz
   trusted-key.key
