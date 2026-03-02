@@ -1,5 +1,5 @@
 # Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
-# Maintainer: Aaron Bassett <abssett@qnx.com>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
 pkgname=avahi
 pkgver=0.9_rc3
 _pkgver="${pkgver/_rc/-rc}" 
