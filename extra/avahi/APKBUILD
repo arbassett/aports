@@ -154,12 +154,12 @@ lidns_sd() {
 	amove usr/lib/libdns_sd.so.*
 }
 
-py3() {
-	pkgdesc="Python Avahi module"
-	depends="py3-dbus python3"
-
-	amove usr/lib/python*
-}
+#py3() {
+#	pkgdesc="Python Avahi module"
+#	depends="python3-dbus python3"
+#
+#	amove usr/lib/python*
+#}
 
 
 sha512sums="
