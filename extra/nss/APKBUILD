@@ -51,7 +51,6 @@ build() {
 		--system-nspr \
 		--system-sqlite \
 		--enable-libpkix
-		#-DOS=qnx # remove when i patch gyc
 }
 
 check() {
