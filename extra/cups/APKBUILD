@@ -1,5 +1,5 @@
 # Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
-# Maintianer: Aaron Bassett <abassett@qnx.com
+# Maintianer: Aaron Bassett <abassett@qnx.com>
 pkgname=cups
 pkgver=2.4.16
 pkgrel=0
