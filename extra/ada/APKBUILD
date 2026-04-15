@@ -2,7 +2,7 @@
 # Alpine-Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Aaron Bassett <abassett@qnx.com>
 pkgname=ada
-# NOTE: The primary use of this library is for main/nodejs and community/nodejs-current.
+# NOTE: The primary use of this library is for extra/nodejs and extra/nodejs-current.
 pkgver=3.4.4
 pkgrel=0
 pkgdesc="WHATWG-compliant and fast URL parser written in modern C++"
