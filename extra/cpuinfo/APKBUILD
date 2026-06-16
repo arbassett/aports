@@ -1,7 +1,7 @@
 # Maintainer: Ethan Leir <eleir@qnx.com>
 pkgname=cpuinfo
 pkgver=1.0.0_git20250808
-pkgrel=1
+pkgrel=2
 pkgdesc="A tool for detecting host CPU performance information"
 url="https://github.com/pytorch/cpuinfo"
 arch="all"
@@ -33,7 +33,8 @@ build() {
         -DCPUINFO_BUILD_TOOLS=OFF \
         -DCPUINFO_BUILD_MOCK_TESTS=OFF \
         -DCPUINFO_BUILD_UNIT_TESTS=OFF \
-        -DCPUINFO_BUILD_BENCHMARKS=OFF
+        -DCPUINFO_BUILD_BENCHMARKS=OFF \
+        -DQNX=ON
     cmake3.5 --build build
 }
 
