@@ -1,14 +1,14 @@
 # Maintainer: Leo Shen <yishen@qnx.com>
 pkgname=openrc
 pkgver=0.63.1
-pkgrel=0
+pkgrel=1
 pkgdesc="OpenRC manages the services, startup and shutdown of a host"
 url="https://github.com/OpenRC/openrc"
 vcs_url="$url"
 arch="all"
 license="BSD-3-Clause"
-depends="qnx-security qnx-memstream qnx-io-sock"
-depends_dev="qnx-security-dev qnx-memstream-dev qnx-io-sock-dev"
+depends="qnx-security qnx-memstream qnx-io-sock "
+depends_dev="qnx-security-dev qnx-memstream-dev qnx-io-sock-dev ncurses-dev"
 makedepends="meson ninja scdoc $depends_dev"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-bash-completion $pkgname-zsh-completion"
 source="$pkgname-$pkgver.tar.gz::https://github.com/OpenRC/openrc/archive/refs/tags/$pkgver.tar.gz
@@ -22,7 +22,9 @@ build() {
 }
 
 check() {
-    meson test --print-errorlogs -C build || msg "Few test failures mainly around their test infra"
+	# QNX does not support $ORIGIN in rpath have to do it ourselves
+	LD_LIBRARY_PATH="$(realpath build/src/librc):$(realpath build/src/libeinfo):$LD_LIBRARY_PATH" \
+	meson test --print-errorlogs -C build
 }
 
 package() {
@@ -31,5 +33,5 @@ package() {
 
 sha512sums="
 d1746909275bd2552ccc4a1786eb5f80ac79ba911ce08ffc12dd550f2965f3bea09ac7c4b638f17f495f92238b833ca1886782c9c7bbba868e1c905e82639a2e  openrc-0.63.1.tar.gz
-2e8d566b8b8da2a1318fc646fa4b03fa840114de8912034034f4c6663c1e1d503be165eb327588b64776bc51b5000485a10cb847a31a258d244bd06529c2480d  fix-qnx.patch
+9a77b8c3f308ffae2f92ca959e88f8cce24dc550f6a5a89206fbf77f6c1b2ace637abd130220dbf35798f0c6e66b1a6f2ff2bfc3456a79f16b7a146de9f4730b  fix-qnx.patch
 "

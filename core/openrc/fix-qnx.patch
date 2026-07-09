@@ -167,11 +167,6 @@ index 6d233a35..208b09a6 100644
  
  #define ERRX do { fprintf (stderr, "out of memory\n"); exit (1); } while (0)
  
-@@ -237,3 +238,4 @@ RC_UNUSED static ssize_t xgetline(char **restrict lineptr, size_t *restrict n, F
- }
- 
- #endif
-+
 -- 
 GitLab
 
