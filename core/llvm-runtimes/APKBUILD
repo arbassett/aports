@@ -12,7 +12,7 @@ url="https://llvm.org/"
 vcs_url="https://github.com/qnx-ports/llvm-project"
 license="Apache-2.0"
 # libc++-bootstrap is provided by libc++. During initial bootstrap remove -bootstrap and manually install libc++-dev
-makedepends="python3 sed cmake ninja perl qnx-io-sock-dev liblocale-shim-dev libc++-dev"
+makedepends="python3 sed cmake ninja perl qnx-io-sock-dev liblocale-shim-dev libc++-dev-bootstrap"
 source="https://github.com/qnx-ports/llvm-project/archive/refs/tags/qnx-$pkgver.tar.gz"
 options="!check" # takes too long
 subpackages="compiler-rt:rt libc++:libcxx libc++-dev:libcxx_dev libc++-static:libcxx_static
