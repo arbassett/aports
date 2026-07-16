@@ -17,7 +17,7 @@ url="https://llvm.org/"
 license="Apache-2.0"
 depends="llvm$_majorver"
 subpackages="
-	$pkgname-gtest:_gtestó
+	$pkgname-gtest:_gtest
 	$pkgname-static
 	$pkgname-libs
 	$pkgname-dev
