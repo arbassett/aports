@@ -1,0 +1,108 @@
+# Alpine-Contributor: Eric Molitor <eric@molitor.org>
+# Alpine-Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Alpine-Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Alpine-Maintainer: Achill Gilgenast <achill@achill.org>
+# Maintainer: Aaron Bassett <abassett@qnx.com>
+_patch_rev=1
+pkgver=22.1.4_p$_patch_rev
+pkgrel=0
+# NOTE: Upgrade together with the whole LLVM suite.
+_llvmver=${pkgver%%.*}
+_llvmver_minor=${pkgver#*.}
+_llvmver_minor=${_llvmver_minor%%.*}
+pkgname=lld$_llvmver
+pkgdesc="The LLVM Linker"
+url="https://llvm.org/"
+arch="all"
+license="Apache-2.0"
+depends="$pkgname-libs"
+depends_libs="llvm22-libs zlib-ng zstd-libs"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+#libedit llvm$_llvmver-test-utils
+makedepends="
+	clang$_llvmver
+	cmake
+	compiler-rt
+	libxml2-dev
+	llvm$llvmver
+	llvm$_llvmver-dev
+	llvm$_llvmver-gtest
+	llvm$_llvmver-static
+	libunwind-dev
+	zlib-dev
+	"
+checkdepends="gtest-dev bash"
+subpackages="$pkgname-dbg $pkgname-libs $pkgname-dev $pkgname-doc"
+source="
+    https://github.com/qnx-ports/llvm-project/archive/refs/tags/qnx-${pkgver}.tar.gz
+    qnx-lld-stack-size.patch
+    accept-zlib-ng-compessed-size.patch"
+_basedir="$srcdir/llvm-project-qnx-$pkgver"
+builddir="$_basedir/lld"
+options="!check"
+_prefix="usr/lib/llvm$_llvmver"
+
+build() {
+	CFLAGS="$CFLAGS -O2 -DNDEBUG -g1" \
+	CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG -g1" \
+	CC=clang-$_llvmver CXX=clang++-$_llvmver \
+	cmake -B build -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/"$_prefix" \
+		-DCMAKE_SKIP_INSTALL_RPATH=ON \
+		-DBUILD_SHARED_LIBS=ON \
+		-DLLVM_INCLUDE_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DLLVM_EXTERNAL_LIT="/usr/lib/llvm$_llvmver/bin/lit" \
+		-DLLD_BUILT_STANDALONE=ON \
+		-DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS -Wl,-z,stack-size=2097152"
+	cmake --build build
+}
+
+check() {
+	ninja -C build check-lld
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm644 docs/ld.lld.1 -t "$pkgdir/usr/share/man/man1/ld.lld-$_llvmver.1"
+
+	mkdir -p  "$pkgdir"/usr/bin
+
+	for _binname in lld ld.lld ld64.lld lld-link wasm-ld; do
+	    ln -s "/../lib/llvm$_llvmver/bin/$_binname" "$pkgdir/usr/bin/$_binname-$_llvmver"
+	done
+
+
+}
+
+libs() {
+	mkdir -p "$subpkgdir"
+	cd "$subpkgdir"
+
+	mkdir -p "$subpkgdir"/usr/lib
+	mkdir -p "$subpkgdir/$_prefix"/lib
+
+	for _libname in COFF Common ELF MachO MinGW Wasm; do
+            _lib="liblld$_libname.so.$_llvmver.$_llvmver_minor"
+            mv "$pkgdir/$_prefix/lib/$_lib" usr/lib
+            ln -s ../../"$_lib" "$_prefix/lib/$_lib"
+        done
+}
+
+dev() {
+	default_dev
+
+	amove "$_prefix/lib/cmake/lld"
+	amove "$_prefix/lib/liblld*"
+
+	mkdir -p "$subpkgdir"/usr/lib/cmake
+	ln -sfv ../llvm$_llvmver/lib/cmake/lld "$subpkgdir"/usr/lib/cmake/lld$_llvmver
+
+}
+
+
+sha512sums="
+70390f6c3d69066ccee0a887b76c5db6cbfa60b0ba1ae4e40d9762f5fb3420f5219ef08c8a656644ff29cb57d1d2642572b5f3f76a6d8106f35c23582e9110e1  qnx-22.1.4_p1.tar.gz
+c71dc20b3681fd55cb8acd639e94b6ac43916729678249b4c00744164411da07057ca9dc969f627362472f747098fa71ac5471edcb64a014ea28874449e019e3  qnx-lld-stack-size.patch
+cf1aaa583f3f3558b6362730c6725e6760c27665b1f9c439328b28f7c0fcc1002c4fd57f503d279419ad297da4cfde46039a0ace6dcf09c37fd6c650896c03b9  accept-zlib-ng-compessed-size.patch
+"
