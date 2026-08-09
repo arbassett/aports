@@ -15,6 +15,7 @@ makedepends="
     ninja 
     pkgconf
     pkgconf-dev
+    wayland
     wayland-dev
     wayland-protocols
     xkeyboard-config-dev
