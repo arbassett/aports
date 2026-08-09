@@ -2,7 +2,7 @@
 # Maintainer: Aaron Bassett <abassett@qnx.com>
 pkgname=shared-mime-info
 pkgver=2.4
-pkgrel=0
+pkgrel=1
 pkgdesc="Freedesktop.org Shared MIME Info"
 url="https://www.freedesktop.org/Software/shared-mime-info"
 arch="all"
