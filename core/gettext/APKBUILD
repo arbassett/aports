@@ -8,6 +8,7 @@ license="GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT"
 #makedepends="autoconf automake libtool"
 depends="libxml2"
 depends_libs="libintl libiconv libunistring ncurses qnx-io-sock"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
 makedepends="perl ncurses-dev libxml2-dev libunistring-dev libiconv-dev qnx-io-sock-dev"
 subpackages="
     $pkgname-doc
