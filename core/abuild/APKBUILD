@@ -1,8 +1,8 @@
 # Maintainer: Leo Shen <yishen@qnx.com>
 pkgname=abuild
 _pkgver=3.16.0
-pkgver=${_pkgver}_p1
-pkgrel=2
+pkgver=${_pkgver}_p2
+pkgrel=0
 pkgdesc="APK build toolchain, adapted for QNX"
 url="https://gitlab.alpinelinux.org/alpine/abuild/"
 arch="all"
