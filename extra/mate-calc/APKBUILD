@@ -3,7 +3,7 @@
 # Maintainer: Elliott Mazzuca <emazzuca@qnx.com>
 pkgname=mate-calc
 pkgver=1.28.0
-pkgrel=0
+pkgrel=1
 pkgdesc="Calculator for MATE"
 url="https://github.com/mate-desktop/mate-calc"
 arch="all"
@@ -12,7 +12,7 @@ depends="glib gmp gtk3 libxml2 mpfr mpc1"
 makedepends="
   libtool intltool itstool gettext-dev
   gtk3-dev glib-dev libxml2-dev
-  mpc1-dev mpfr-dev gmp-dev
+  mpc1-dev mpfr-dev gmp-dev qnx-screen-dev
 "
 subpackages="$pkgname-lang $pkgname-doc"
 source="https://pub.mate-desktop.org/releases/${pkgver%.*}/mate-calc-$pkgver.tar.xz
