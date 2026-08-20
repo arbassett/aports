@@ -1,0 +1,45 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+# Alpine-Maintainer: Achill Gilgenast <achill@achill.org>
+# Maintainer: Deep Chordia <dchordia@qnx.com>
+pkgname=aws-c-common
+pkgver=0.12.6
+pkgrel=0
+pkgdesc="Core c99 package for AWS SDK for C. Includes cross-platform primitives, configuration, data structures, and error handling."
+url="https://github.com/awslabs/aws-c-common"
+arch="all"
+license="Apache-2.0"
+depends_dev="qnx-io-sock-dev"
+makedepends="
+    $depends_dev
+    cmake
+    ninja
+"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/awslabs/aws-c-common/archive/refs/tags/v$pkgver.tar.gz
+        0001-add-qnx-build.patch
+        "
+
+build() {
+  cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_DATADIR=/usr/lib \
+    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_TESTING=ON \
+    -DQNX=1
+  cmake --build build
+}
+
+check() {
+  test_exclude="test_memory_usage_maxrss|device_rand_buffer_distribution|device_rand_buffer_append_distribution"
+  ctest --test-dir build -E "$test_exclude" -j1
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+577fdea85ea84563e2167d70f0988ceeccc6ab298a2ca034393872d1717237a64be0d0b5e9cd2083c2278b8c294bc4afb8f8d6bcc13e144259fa0e3166af35bb  aws-c-common-0.12.6.tar.gz
+0bb282c431a45d331e97a14145797ee7297a3ae31cbf76715f0d9f344070fdfdfb90586b465201e44b41185937634ab71ddd332f96f5a15ca367a1c060129f2a  0001-add-qnx-build.patch
+"
