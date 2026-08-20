@@ -1,7 +1,42 @@
-diff --git c/backend/backend.c i/backend/backend.c
+From 7c2d1335e71aeac2f3a2b05d23917512ce437c11 Mon Sep 17 00:00:00 2001
+From: Aaron Bassett <abassett@qnx.com>
+Date: Wed, 19 Aug 2026 16:45:38 +0000
+Subject: [PATCH 1/3] pixman working
+
+---
+ backend/backend.c                          |  38 +
+ backend/meson.build                        |   3 +
+ backend/qnx-screen/backend.c               | 259 ++++++
+ backend/qnx-screen/event_monitor.c         | 141 +++
+ backend/qnx-screen/input_device.c          | 427 +++++++++
+ backend/qnx-screen/meson.build             |  34 +
+ backend/qnx-screen/output.c                | 558 ++++++++++++
+ include/backend/qnx_screen.h               | 113 +++
+ include/backend/qnx_screen_event_monitor.h |  37 +
+ include/meson.build                        |   3 +
+ include/wlr/backend/qnx_screen.h           |  85 ++
+ include/wlr/config.h.in                    |   8 +
+ linux/input-event-codes.h                  | 954 +++++++++++++++++++++
+ meson.build                                |   1 +
+ meson.options                              |   2 +-
+ types/scene/surface.c                      |   2 +
+ types/wlr_compositor.c                     |   5 +
+ util/box.c                                 |   4 +
+ 18 files changed, 2673 insertions(+), 1 deletion(-)
+ create mode 100644 backend/qnx-screen/backend.c
+ create mode 100644 backend/qnx-screen/event_monitor.c
+ create mode 100644 backend/qnx-screen/input_device.c
+ create mode 100644 backend/qnx-screen/meson.build
+ create mode 100644 backend/qnx-screen/output.c
+ create mode 100644 include/backend/qnx_screen.h
+ create mode 100644 include/backend/qnx_screen_event_monitor.h
+ create mode 100644 include/wlr/backend/qnx_screen.h
+ create mode 100644 linux/input-event-codes.h
+
+diff --git a/backend/backend.c b/backend/backend.c
 index 3d84aa63..7f2998ba 100644
---- c/backend/backend.c
-+++ i/backend/backend.c
+--- a/backend/backend.c
++++ b/backend/backend.c
 @@ -32,6 +32,10 @@
  #include <wlr/backend/x11.h>
  #endif
@@ -68,10 +103,10 @@ index 3d84aa63..7f2998ba 100644
  	// Attempt DRM+libinput
  	session = session_create_and_wait(loop);
  	if (!session) {
-diff --git c/backend/meson.build i/backend/meson.build
+diff --git a/backend/meson.build b/backend/meson.build
 index ed977d3b..c290b1ba 100644
---- c/backend/meson.build
-+++ i/backend/meson.build
+--- a/backend/meson.build
++++ b/backend/meson.build
 @@ -1,6 +1,9 @@
  wlr_files += files('backend.c')
  
@@ -82,11 +117,11 @@ index ed977d3b..c290b1ba 100644
  backends = get_option('backends')
  if 'auto' in backends and get_option('auto_features').enabled()
  	backends = all_backends
-diff --git c/backend/qnx-screen/backend.c i/backend/qnx-screen/backend.c
+diff --git a/backend/qnx-screen/backend.c b/backend/qnx-screen/backend.c
 new file mode 100644
 index 00000000..308c017d
 --- /dev/null
-+++ i/backend/qnx-screen/backend.c
++++ b/backend/qnx-screen/backend.c
 @@ -0,0 +1,259 @@
 +#include <assert.h>
 +#include <stdlib.h>
@@ -347,11 +382,11 @@ index 00000000..308c017d
 +	free(backend);
 +	return NULL;
 +}
-diff --git c/backend/qnx-screen/event_monitor.c i/backend/qnx-screen/event_monitor.c
+diff --git a/backend/qnx-screen/event_monitor.c b/backend/qnx-screen/event_monitor.c
 new file mode 100644
 index 00000000..74a3f6ce
 --- /dev/null
-+++ i/backend/qnx-screen/event_monitor.c
++++ b/backend/qnx-screen/event_monitor.c
 @@ -0,0 +1,141 @@
 +/*
 + * QNX Screen event-notification monitor thread.
@@ -494,11 +529,11 @@ index 00000000..74a3f6ce
 +		struct wlr_qnx_screen_event_monitor *m) {
 +	MsgSendPulse(m->coid, SIGEV_PULSE_PRIO_INHERIT, c_arm_code, 0);
 +}
-diff --git c/backend/qnx-screen/input_device.c i/backend/qnx-screen/input_device.c
+diff --git a/backend/qnx-screen/input_device.c b/backend/qnx-screen/input_device.c
 new file mode 100644
 index 00000000..061d6194
 --- /dev/null
-+++ i/backend/qnx-screen/input_device.c
++++ b/backend/qnx-screen/input_device.c
 @@ -0,0 +1,427 @@
 +#include <linux/input-event-codes.h>
 +#include <stdlib.h>
@@ -927,11 +962,11 @@ index 00000000..061d6194
 +		return false;
 +	}
 +}
-diff --git c/backend/qnx-screen/meson.build i/backend/qnx-screen/meson.build
+diff --git a/backend/qnx-screen/meson.build b/backend/qnx-screen/meson.build
 new file mode 100644
 index 00000000..7613f405
 --- /dev/null
-+++ i/backend/qnx-screen/meson.build
++++ b/backend/qnx-screen/meson.build
 @@ -0,0 +1,34 @@
 +# Self-hosted QNX build: we're compiling natively with clang + lld via a
 +# plain meson cross/native file that already points at a QNX sysroot
@@ -967,11 +1002,11 @@ index 00000000..7613f405
 +)
 +wlr_deps += qnx_screen_libs
 +features += { 'qnx-screen-backend': true }
-diff --git c/backend/qnx-screen/output.c i/backend/qnx-screen/output.c
+diff --git a/backend/qnx-screen/output.c b/backend/qnx-screen/output.c
 new file mode 100644
 index 00000000..1a109caa
 --- /dev/null
-+++ i/backend/qnx-screen/output.c
++++ b/backend/qnx-screen/output.c
 @@ -0,0 +1,558 @@
 +#include <assert.h>
 +#include <stdio.h>
@@ -1531,11 +1566,11 @@ index 00000000..1a109caa
 +
 +	return wlr_output;
 +}
-diff --git c/include/backend/qnx_screen.h i/include/backend/qnx_screen.h
+diff --git a/include/backend/qnx_screen.h b/include/backend/qnx_screen.h
 new file mode 100644
 index 00000000..b2d92f4e
 --- /dev/null
-+++ i/include/backend/qnx_screen.h
++++ b/include/backend/qnx_screen.h
 @@ -0,0 +1,113 @@
 +#ifndef BACKEND_QNX_SCREEN_H
 +#define BACKEND_QNX_SCREEN_H
@@ -1650,11 +1685,11 @@ index 00000000..b2d92f4e
 +	int screen_modifiers);
 +
 +#endif
-diff --git c/include/backend/qnx_screen_event_monitor.h i/include/backend/qnx_screen_event_monitor.h
+diff --git a/include/backend/qnx_screen_event_monitor.h b/include/backend/qnx_screen_event_monitor.h
 new file mode 100644
 index 00000000..87d7f1bf
 --- /dev/null
-+++ i/include/backend/qnx_screen_event_monitor.h
++++ b/include/backend/qnx_screen_event_monitor.h
 @@ -0,0 +1,37 @@
 +#ifndef BACKEND_QNX_SCREEN_EVENT_MONITOR_H
 +#define BACKEND_QNX_SCREEN_EVENT_MONITOR_H
@@ -1693,10 +1728,10 @@ index 00000000..87d7f1bf
 +	struct wlr_qnx_screen_event_monitor *monitor);
 +
 +#endif
-diff --git c/include/meson.build i/include/meson.build
+diff --git a/include/meson.build b/include/meson.build
 index 165166c3..2cbd4d50 100644
---- c/include/meson.build
-+++ i/include/meson.build
+--- a/include/meson.build
++++ b/include/meson.build
 @@ -11,6 +11,9 @@ endif
  if not features.get('x11-backend')
  	exclude_files += 'backend/x11.h'
@@ -1707,11 +1742,11 @@ index 165166c3..2cbd4d50 100644
  if not features.get('xwayland')
  	exclude_files += 'xwayland.h'
  endif
-diff --git c/include/wlr/backend/qnx_screen.h i/include/wlr/backend/qnx_screen.h
+diff --git a/include/wlr/backend/qnx_screen.h b/include/wlr/backend/qnx_screen.h
 new file mode 100644
 index 00000000..43e39026
 --- /dev/null
-+++ i/include/wlr/backend/qnx_screen.h
++++ b/include/wlr/backend/qnx_screen.h
 @@ -0,0 +1,85 @@
 +/*
 + * This an unstable interface of wlroots. No guarantees are made regarding the
@@ -1798,10 +1833,10 @@ index 00000000..43e39026
 +	int display_id);
 +
 +#endif
-diff --git c/include/wlr/config.h.in i/include/wlr/config.h.in
+diff --git a/include/wlr/config.h.in b/include/wlr/config.h.in
 index ef186343..0c66e29a 100644
---- c/include/wlr/config.h.in
-+++ i/include/wlr/config.h.in
+--- a/include/wlr/config.h.in
++++ b/include/wlr/config.h.in
 @@ -23,6 +23,14 @@
   */
  #mesondefine WLR_HAS_X11_BACKEND
@@ -1817,11 +1852,11 @@ index ef186343..0c66e29a 100644
  /**
   * Whether the GLES2 renderer is compile-time enabled. Equivalent to the
   * pkg-config "have_gles2_renderer" variable.
-diff --git c/linux/input-event-codes.h i/linux/input-event-codes.h
+diff --git a/linux/input-event-codes.h b/linux/input-event-codes.h
 new file mode 100644
 index 00000000..0e6df3b5
 --- /dev/null
-+++ i/linux/input-event-codes.h
++++ b/linux/input-event-codes.h
 @@ -0,0 +1,954 @@
 +/* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note */
 +/*
@@ -2777,10 +2812,10 @@ index 00000000..0e6df3b5
 +#define SND_CNT			(SND_MAX+1)
 +
 +#endif
-diff --git c/meson.build i/meson.build
+diff --git a/meson.build b/meson.build
 index 41ce1ea2..7c717d73 100644
---- c/meson.build
-+++ i/meson.build
+--- a/meson.build
++++ b/meson.build
 @@ -70,6 +70,7 @@ features = {
  	'drm-backend': false,
  	'x11-backend': false,
@@ -2789,10 +2824,10 @@ index 41ce1ea2..7c717d73 100644
  	'xwayland': false,
  	'gles2-renderer': false,
  	'vulkan-renderer': false,
-diff --git c/meson.options i/meson.options
+diff --git a/meson.options b/meson.options
 index 5863764a..7956b3af 100644
---- c/meson.options
-+++ i/meson.options
+--- a/meson.options
++++ b/meson.options
 @@ -3,7 +3,7 @@ option('xwayland', type: 'feature', value: 'auto', yield: true, description: 'En
  option('examples', type: 'boolean', value: true, description: 'Build example applications')
  option('icon_directory', description: 'Location used to look for cursors (default: ${datadir}/icons)', type: 'string', value: '')
@@ -2802,10 +2837,10 @@ index 5863764a..7956b3af 100644
  option('allocators', type: 'array', choices: ['auto', 'gbm', 'udmabuf'], value: ['auto'],
  	description: 'Select built-in allocators')
  option('session', type: 'feature', value: 'auto', description: 'Enable session support')
-diff --git c/types/scene/surface.c i/types/scene/surface.c
+diff --git a/types/scene/surface.c b/types/scene/surface.c
 index 89c54a9e..909bf6ff 100644
---- c/types/scene/surface.c
-+++ i/types/scene/surface.c
+--- a/types/scene/surface.c
++++ b/types/scene/surface.c
 @@ -231,9 +231,11 @@ static void scene_buffer_unmark_client_buffer(struct wlr_scene_buffer *scene_buf
  	}
  }
@@ -2818,10 +2853,10 @@ index 89c54a9e..909bf6ff 100644
  
  static void surface_reconfigure(struct wlr_scene_surface *scene_surface) {
  	struct wlr_scene_buffer *scene_buffer = scene_surface->buffer;
-diff --git c/types/wlr_compositor.c i/types/wlr_compositor.c
+diff --git a/types/wlr_compositor.c b/types/wlr_compositor.c
 index 75faed19..1db44d29 100644
---- c/types/wlr_compositor.c
-+++ i/types/wlr_compositor.c
+--- a/types/wlr_compositor.c
++++ b/types/wlr_compositor.c
 @@ -19,6 +19,8 @@
  #define COMPOSITOR_VERSION 6
  #define CALLBACK_VERSION 1
@@ -2849,10 +2884,10 @@ index 75faed19..1db44d29 100644
  
  static void set_pending_buffer_resource(struct wlr_surface *surface,
  		struct wl_resource *resource) {
-diff --git c/util/box.c i/util/box.c
+diff --git a/util/box.c b/util/box.c
 index 489c5ad2..e56dc2c5 100644
---- c/util/box.c
-+++ i/util/box.c
+--- a/util/box.c
++++ b/util/box.c
 @@ -4,13 +4,17 @@
  #include <wlr/util/box.h>
  #include <wlr/util/log.h>
@@ -2871,3 +2906,875 @@ index 489c5ad2..e56dc2c5 100644
  
  void wlr_box_closest_point(const struct wlr_box *box, double x, double y,
  		double *dest_x, double *dest_y) {
+-- 
+2.51.0
+
+
+From 75495a019086bb6662249f255eaaf1afe15cac1e Mon Sep 17 00:00:00 2001
+From: Aaron Bassett <abassett@qnx.com>
+Date: Wed, 19 Aug 2026 17:37:05 +0000
+Subject: [PATCH 2/3] basic egl
+
+---
+ backend/qnx-screen/backend.c     | 183 ++++++++++++++++++++++++++++++-
+ backend/qnx-screen/output.c      | 149 +++++++++++++++++++++++--
+ include/backend/qnx_screen.h     |  12 ++
+ include/render/egl.h             |   1 +
+ include/wlr/backend/qnx_screen.h |   1 +
+ render/egl.c                     |  23 +++-
+ 6 files changed, 353 insertions(+), 16 deletions(-)
+
+diff --git a/backend/qnx-screen/backend.c b/backend/qnx-screen/backend.c
+index 308c017d..84cfa058 100644
+--- a/backend/qnx-screen/backend.c
++++ b/backend/qnx-screen/backend.c
+@@ -1,5 +1,8 @@
+ #include <assert.h>
++#include <dirent.h>
++#include <fcntl.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <unistd.h>
+ 
+ #include <drm_fourcc.h>
+@@ -15,6 +18,70 @@
+ 
+ #include "backend/qnx_screen.h"
+ 
++/*
++ * QNX Screen windows have no native concept of dmabuf/GBM -- but if this
++ * system has a working DRM render node behind /dev/dri (a real one, not a
++ * QNX Screen abstraction), wlroots' own wlr_renderer_autocreate()/
++ * wlr_allocator_autocreate() will use it to select the GLES2 renderer and a
++ * GBM allocator entirely on their own, the moment wlr_backend_get_drm_fd()
++ * returns something >= 0. That in turn is what makes labwc advertise
++ * zwp_linux_dmabuf_v1 to clients (see wlr_linux_dmabuf_v1_create_with_renderer()
++ * in wlroots' types/wlr_linux_dmabuf_v1.c) -- we don't implement that
++ * protocol ourselves, we just need to stop returning -1 here.
++ *
++ * Our own output_commit() still has to get pixels onto an actual QNX Screen
++ * window buffer, which stays CPU-side (see copy_buffer_to_window() in
++ * output.c) -- but everything upstream of that (client rendering, the
++ * renderer's internal scene compositing) is now real GLES2/dmabuf.
++ *
++ * Override with $WLR_QNX_SCREEN_DRM_DEVICE if the render node isn't at one
++ * of the usual /dev/dri/renderD1xx paths.
++ */
++static int open_drm_render_node(void) {
++	const char *override = getenv("WLR_QNX_SCREEN_DRM_DEVICE");
++	if (override != NULL && override[0] != '\0') {
++		int fd = open(override, O_RDWR | O_CLOEXEC);
++		if (fd < 0) {
++			wlr_log_errno(WLR_ERROR,
++				"Failed to open WLR_QNX_SCREEN_DRM_DEVICE=%s", override);
++		}
++		return fd;
++	}
++
++	DIR *dir = opendir("/dev/dri");
++	if (dir == NULL) {
++		wlr_log(WLR_INFO,
++			"/dev/dri not present; qnx-screen backend will use SHM/pixman only");
++		return -1;
++	}
++
++	int fd = -1;
++	struct dirent *ent;
++	while ((ent = readdir(dir)) != NULL) {
++		if (strncmp(ent->d_name, "renderD", 7) != 0) {
++			continue;
++		}
++
++		char path[256];
++		snprintf(path, sizeof(path), "/dev/dri/%s", ent->d_name);
++
++		fd = open(path, O_RDWR | O_CLOEXEC);
++		if (fd >= 0) {
++			wlr_log(WLR_INFO, "Using DRM render node %s", path);
++			break;
++		}
++		wlr_log_errno(WLR_DEBUG, "Failed to open %s", path);
++	}
++	closedir(dir);
++
++	if (fd < 0) {
++		wlr_log(WLR_INFO,
++			"No usable /dev/dri/renderD* node found; qnx-screen backend "
++			"will use SHM/pixman only");
++	}
++	return fd;
++}
++
+ struct wlr_qnx_screen_backend *qnx_screen_backend_from_backend(
+ 		struct wlr_backend *wlr_backend) {
+ 	assert(wlr_backend_is_qnx_screen(wlr_backend));
+@@ -162,6 +229,17 @@ static void backend_destroy(struct wlr_backend *wlr_backend) {
+ 	}
+ 
+ 	wlr_drm_format_set_finish(&backend->shm_formats);
++	wlr_drm_format_set_finish(&backend->dmabuf_formats);
++
++	if (backend->gbm_device != NULL) {
++		gbm_device_destroy(backend->gbm_device);
++	}
++	if (backend->gbm_fd >= 0) {
++		close(backend->gbm_fd);
++	}
++	if (backend->drm_fd >= 0) {
++		close(backend->drm_fd);
++	}
+ 
+ 	if (backend->context) {
+ 		screen_destroy_context(backend->context);
+@@ -170,11 +248,81 @@ static void backend_destroy(struct wlr_backend *wlr_backend) {
+ 	free(backend);
+ }
+ 
++struct gbm_device *qnx_screen_backend_ensure_gbm_device(
++		struct wlr_qnx_screen_backend *backend) {
++	if (backend->gbm_device_init_attempted) {
++		return backend->gbm_device; // NULL if the first attempt failed
++	}
++	backend->gbm_device_init_attempted = true;
++
++	if (backend->drm_fd < 0) {
++		return NULL;
++	}
++
++	// output.c's copy_buffer_to_window() uses this (via
++	// gbm_bo_import()/gbm_bo_map()) to read GPU-rendered dmabuf output
++	// buffers back to the CPU. This matters more than it might look: a
++	// bare mmap() on the dmabuf fd is NOT sufficient on every driver --
++	// e.g. virtio-gpu (virgl) resources live host-side and need the
++	// driver's own transfer path, which only gbm_bo_map() is guaranteed
++	// to trigger. Without a working gbm_device here, dmabuf output reads
++	// back as black/garbage regardless of dma-buf fencing.
++	//
++	// Deliberately dup()'d: wlr_allocator_autocreate() creates its OWN
++	// independent gbm_device against backend->drm_fd. Two struct
++	// gbm_device instances sharing one fd is a real conflict on some
++	// drivers -- observed in practice as wlroots' own "Failed to create
++	// allocator" once this backend also held a gbm_device open on the
++	// same fd number. Each gbm_device gets its own fd instead.
++	//
++	// Deliberately lazy (called from output.c on first dmabuf commit, not
++	// from wlr_qnx_screen_backend_create()): creating a gbm_device before
++	// EGL has ever initialized against this device has been observed to
++	// fail outright on this Mesa/virtio-gpu build ("Can't open 'dri'
++	// library!" from Mesa's own DRI loader). By the time we get here, a
++	// dmabuf-backed wlr_buffer already exists, which means the GLES2
++	// renderer (and therefore EGL) already initialized successfully.
++	int gbm_fd = fcntl(backend->drm_fd, F_DUPFD_CLOEXEC, 0);
++	if (gbm_fd < 0) {
++		wlr_log_errno(WLR_ERROR, "Failed to dup DRM fd for our own gbm_device");
++		return NULL;
++	}
++
++	backend->gbm_device = gbm_create_device(gbm_fd);
++	if (backend->gbm_device == NULL) {
++		wlr_log(WLR_ERROR,
++			"gbm_create_device failed on the DRM render node; dmabuf "
++			"output buffers won't be readable");
++		close(gbm_fd);
++		return NULL;
++	}
++
++	backend->gbm_fd = gbm_fd;
++	return backend->gbm_device;
++}
++
+ static int backend_get_drm_fd(struct wlr_backend *wlr_backend) {
+-	// QNX has no DRM/GBM. Returning -1 makes wlr_renderer_autocreate() and
+-	// wlr_allocator_autocreate() fall back to the pixman renderer and the
+-	// generic shared-memory allocator, respectively.
+-	return -1;
++	struct wlr_qnx_screen_backend *backend =
++		qnx_screen_backend_from_backend(wlr_backend);
++	// -1 if no usable /dev/dri/renderD* node was found at creation time; see
++	// open_drm_render_node() above. That's a perfectly normal, supported
++	// configuration -- wlr_renderer_autocreate()/wlr_allocator_autocreate()
++	// fall back to pixman + the generic SHM allocator automatically in that
++	// case.
++	//
++	// Deliberately NOT gated on backend->gbm_device here (that would be
++	// tempting, since output.c's copy_buffer_to_window() needs a working
++	// gbm_device to actually read GPU-rendered buffers back). But this
++	// backend's own gbm_device is created lazily, on first use, in
++	// output.c -- specifically because creating one eagerly here, before
++	// EGL has ever touched the device, has been observed to fail outright
++	// on this Mesa/virtio-gpu build (Mesa's GBM "dri" backend needs EGL to
++	// have already initialized against the device first). Reporting -1
++	// here before that's had a chance to happen would prevent
++	// wlr_allocator_autocreate() from ever trying GBM at all, even though
++	// its own (separate, later) gbm_device -- created only after the GLES2
++	// renderer already exists -- works fine.
++	return backend->drm_fd;
+ }
+ 
+ static const struct wlr_backend_impl backend_impl = {
+@@ -204,7 +352,16 @@ struct wlr_backend *wlr_qnx_screen_backend_create(struct wl_event_loop *loop) {
+ 	}
+ 
+ 	wlr_backend_init(&backend->backend, &backend_impl);
+-	backend->backend.buffer_caps = WLR_BUFFER_CAP_SHM;
++	// Advertise both: wlr_allocator_autocreate() picks GBM (dmabuf) only if
++	// backend_get_drm_fd() actually returns a valid fd below; otherwise it
++	// falls back to SHM automatically. Safe to advertise unconditionally.
++	backend->backend.buffer_caps = WLR_BUFFER_CAP_SHM | WLR_BUFFER_CAP_DMABUF;
++	backend->gbm_fd = -1;
++	backend->drm_fd = open_drm_render_node();
++	// backend->gbm_device is NOT created here -- see qnx_screen_get_gbm_device()
++	// in output.c, which creates it lazily on first use instead. Doing it
++	// this early (before EGL has ever touched the device) has been observed
++	// to fail outright on some Mesa/virtio-gpu builds.
+ 
+ 	backend->event_loop = loop;
+ 	wl_list_init(&backend->outputs);
+@@ -223,6 +380,12 @@ struct wlr_backend *wlr_qnx_screen_backend_create(struct wl_event_loop *loop) {
+ 	wlr_drm_format_set_add(&backend->shm_formats, DRM_FORMAT_XRGB8888,
+ 		DRM_FORMAT_MOD_INVALID);
+ 
++	// Explicit LINEAR (not INVALID/"driver's choice") so the GBM allocator
++	// can't hand us a tiled/compressed layout we can't safely mmap+memcpy
++	// from in copy_buffer_to_window().
++	wlr_drm_format_set_add(&backend->dmabuf_formats, DRM_FORMAT_XRGB8888,
++		DRM_FORMAT_MOD_LINEAR);
++
+ 	wlr_keyboard_init(&backend->keyboard, &qnx_screen_keyboard_impl,
+ 		qnx_screen_keyboard_impl.name);
+ 
+@@ -251,8 +414,18 @@ error_monitor:
+ error_context:
+ 	wlr_keyboard_finish(&backend->keyboard);
+ 	wlr_drm_format_set_finish(&backend->shm_formats);
++	wlr_drm_format_set_finish(&backend->dmabuf_formats);
+ 	screen_destroy_context(backend->context);
+ error_backend:
++	if (backend->gbm_device != NULL) {
++		gbm_device_destroy(backend->gbm_device);
++	}
++	if (backend->gbm_fd >= 0) {
++		close(backend->gbm_fd);
++	}
++	if (backend->drm_fd >= 0) {
++		close(backend->drm_fd);
++	}
+ 	wlr_backend_finish(&backend->backend);
+ 	free(backend);
+ 	return NULL;
+diff --git a/backend/qnx-screen/output.c b/backend/qnx-screen/output.c
+index 1a109caa..a17d061d 100644
+--- a/backend/qnx-screen/output.c
++++ b/backend/qnx-screen/output.c
+@@ -2,6 +2,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <unistd.h>
+ 
+ #include <drm_fourcc.h>
+ #include <screen/screen.h>
+@@ -9,6 +10,7 @@
+ #include <wlr/interfaces/wlr_output.h>
+ #include <wlr/interfaces/wlr_pointer.h>
+ #include <wlr/interfaces/wlr_touch.h>
++#include <wlr/render/dmabuf.h>
+ #include <wlr/types/wlr_buffer.h>
+ #include <wlr/util/log.h>
+ 
+@@ -194,9 +196,25 @@ static bool output_test(struct wlr_output *wlr_output,
+ 		}
+ 
+ 		struct wlr_shm_attributes shm;
+-		if (!wlr_buffer_get_shm(state->buffer, &shm)) {
++		struct wlr_dmabuf_attributes dmabuf;
++		if (wlr_buffer_get_shm(state->buffer, &shm)) {
++			// OK: CPU-copied straight into the QNX Screen window buffer.
++		} else if (wlr_buffer_get_dmabuf(state->buffer, &dmabuf)) {
++			// OK, as long as it's something we can mmap() and walk row by
++			// row: single-plane, linear (matches the LINEAR-only modifier
++			// we advertise in output_get_primary_formats(), so a
++			// conforming allocator shouldn't hand us anything else, but
++			// don't trust that blindly).
++			if (dmabuf.n_planes != 1 || dmabuf.modifier != DRM_FORMAT_MOD_LINEAR) {
++				wlr_log(WLR_DEBUG,
++					"Unsupported dmabuf layout (n_planes=%d modifier=0x%"PRIx64")",
++					dmabuf.n_planes, (uint64_t)dmabuf.modifier);
++				return false;
++			}
++		} else {
+ 			wlr_log(WLR_DEBUG,
+-				"QNX Screen output only supports shared-memory buffers");
++				"QNX Screen output only supports shared-memory or "
++				"single-plane linear dmabuf buffers");
+ 			return false;
+ 		}
+ 	}
+@@ -221,14 +239,113 @@ static int finish_frame_handler(void *data) {
+ 	return 0;
+ }
+ 
++struct qnx_screen_buffer_access {
++	bool is_shm;
++	struct gbm_bo *gbm_bo;
++	void *gbm_map_data;
++};
++
++// Gets a CPU-readable pointer + row stride to a wlr_buffer's pixel data,
++// regardless of whether it's SHM-backed (the common case today) or
++// dmabuf-backed (once wlr_allocator_autocreate() picks GBM, see backend.c).
++// QNX Screen buffers are always window-bound, so there's no way to make the
++// renderer draw directly into one -- we always end up doing this copy.
++static bool begin_buffer_access(struct wlr_qnx_screen_backend *backend,
++		struct wlr_buffer *buffer, void **src_out, size_t *stride_out,
++		struct qnx_screen_buffer_access *access) {
++	memset(access, 0, sizeof(*access));
++
++	void *src;
++	uint32_t format;
++	size_t stride;
++	if (wlr_buffer_begin_data_ptr_access(buffer,
++			WLR_BUFFER_DATA_PTR_ACCESS_READ, &src, &format, &stride)) {
++		access->is_shm = true;
++		*src_out = src;
++		*stride_out = stride;
++		return true;
++	}
++
++	struct wlr_dmabuf_attributes dmabuf;
++	if (!wlr_buffer_get_dmabuf(buffer, &dmabuf) || dmabuf.n_planes != 1) {
++		return false;
++	}
++
++	struct gbm_device *gbm_device = qnx_screen_backend_ensure_gbm_device(backend);
++	if (gbm_device == NULL) {
++		wlr_log(WLR_ERROR,
++			"Got a dmabuf-backed output buffer but have no usable gbm_device "
++			"to read it back with");
++		return false;
++	}
++
++	// A bare mmap() on dmabuf.fd[0] is deliberately NOT used here. On some
++	// drivers (virtio-gpu/virgl in particular -- the buffer may live
++	// host-side in a VM) a raw mmap() bypasses whatever transfer the driver
++	// needs to actually get rendered content into a CPU-visible mapping,
++	// and reads back as stale/zeroed (black) regardless of dma-buf fencing.
++	// gbm_bo_map() is the portable, driver-correct way to read a GBM
++	// buffer's contents back to the CPU -- it's what handles that transfer
++	// (or does nothing extra, on drivers where a plain mmap would've been
++	// fine) internally, the same way wlroots' own renderer never does a raw
++	// mmap() either (it goes through glReadPixels/wlr_texture_read_pixels).
++	struct gbm_import_fd_modifier_data import_data = {
++		.width = (uint32_t)buffer->width,
++		.height = (uint32_t)buffer->height,
++		.format = dmabuf.format,
++		.num_fds = 1,
++		.modifier = dmabuf.modifier,
++	};
++	import_data.fds[0] = dmabuf.fd[0];
++	import_data.strides[0] = dmabuf.stride[0];
++	import_data.offsets[0] = dmabuf.offset[0];
++
++	struct gbm_bo *bo = gbm_bo_import(gbm_device,
++		GBM_BO_IMPORT_FD_MODIFIER, &import_data, GBM_BO_USE_RENDERING);
++	if (bo == NULL) {
++		wlr_log(WLR_ERROR, "gbm_bo_import failed");
++		return false;
++	}
++
++	uint32_t map_stride = 0;
++	void *map_data = NULL;
++	void *ptr = gbm_bo_map(bo, 0, 0, (uint32_t)buffer->width,
++		(uint32_t)buffer->height, GBM_BO_TRANSFER_READ, &map_stride,
++		&map_data);
++	if (ptr == NULL) {
++		wlr_log(WLR_ERROR, "gbm_bo_map failed");
++		gbm_bo_destroy(bo);
++		return false;
++	}
++
++	access->gbm_bo = bo;
++	access->gbm_map_data = map_data;
++
++	*src_out = ptr;
++	*stride_out = map_stride;
++	return true;
++}
++
++static void end_buffer_access(struct wlr_buffer *buffer,
++		struct qnx_screen_buffer_access *access) {
++	if (access->is_shm) {
++		wlr_buffer_end_data_ptr_access(buffer);
++		return;
++	}
++	if (access->gbm_bo != NULL) {
++		gbm_bo_unmap(access->gbm_bo, access->gbm_map_data);
++		gbm_bo_destroy(access->gbm_bo);
++	}
++}
++
+ static bool copy_buffer_to_window(struct wlr_qnx_screen_output *output,
+ 		struct wlr_buffer *buffer, const struct wlr_output_state *state) {
+ 	void *src;
+-	uint32_t format;
+ 	size_t src_stride;
+-	if (!wlr_buffer_begin_data_ptr_access(buffer,
+-			WLR_BUFFER_DATA_PTR_ACCESS_READ, &src, &format, &src_stride)) {
+-		wlr_log(WLR_ERROR, "wlr_buffer_begin_data_ptr_access failed");
++	struct qnx_screen_buffer_access access;
++	if (!begin_buffer_access(output->backend, buffer, &src, &src_stride,
++			&access)) {
++		wlr_log(WLR_ERROR, "Failed to access buffer contents for copy");
+ 		return false;
+ 	}
+ 
+@@ -241,7 +358,7 @@ static bool copy_buffer_to_window(struct wlr_qnx_screen_output *output,
+ 
+ 	if (dst == NULL || dst_stride <= 0) {
+ 		wlr_log(WLR_ERROR, "Failed to access QNX Screen native buffer");
+-		wlr_buffer_end_data_ptr_access(buffer);
++		end_buffer_access(buffer, &access);
+ 		return false;
+ 	}
+ 
+@@ -256,7 +373,7 @@ static bool copy_buffer_to_window(struct wlr_qnx_screen_output *output,
+ 			(uint8_t *)src + (size_t)y * src_stride, copy_bytes);
+ 	}
+ 
+-	wlr_buffer_end_data_ptr_access(buffer);
++	end_buffer_access(buffer, &access);
+ 
+ 	// Compute dirty rectangles from the damage region, in the same
+ 	// [x1, y1, x2, y2] layout screen_post_window() expects.
+@@ -374,8 +491,22 @@ static bool output_move_cursor(struct wlr_output *wlr_output, int x, int y) {
+ static const struct wlr_drm_format_set *output_get_primary_formats(
+ 		struct wlr_output *wlr_output, uint32_t buffer_caps) {
+ 	struct wlr_qnx_screen_output *output = output_from_wlr_output(wlr_output);
++	struct wlr_qnx_screen_backend *backend = output->backend;
++
++	// Advertise dmabuf/GBM formats based on drm_fd availability, not on
++	// whether backend->gbm_device has been created yet -- it's created
++	// lazily on first actual buffer readback (see
++	// qnx_screen_backend_ensure_gbm_device() in backend.c), which hasn't
++	// happened yet the first time this gets called: wlr_allocator_autocreate()
++	// queries formats BEFORE any buffer exists, to decide whether to try
++	// GBM at all. If our lazy gbm_device creation later fails anyway,
++	// copy_buffer_to_window() fails that specific commit loudly rather
++	// than silently -- better than never trying GBM in the first place.
++	if ((buffer_caps & WLR_BUFFER_CAP_DMABUF) && backend->drm_fd >= 0) {
++		return &backend->dmabuf_formats;
++	}
+ 	if (buffer_caps & WLR_BUFFER_CAP_SHM) {
+-		return &output->backend->shm_formats;
++		return &backend->shm_formats;
+ 	}
+ 	return NULL;
+ }
+diff --git a/include/backend/qnx_screen.h b/include/backend/qnx_screen.h
+index b2d92f4e..e2ff8dc4 100644
+--- a/include/backend/qnx_screen.h
++++ b/include/backend/qnx_screen.h
+@@ -6,6 +6,8 @@
+ 
+ #include <screen/screen.h>
+ 
++#include <gbm.h>
++
+ #include <wayland-server-core.h>
+ 
+ #include <wlr/backend/qnx_screen.h>
+@@ -31,6 +33,9 @@ struct wlr_qnx_screen_backend {
+ 	screen_display_t default_display;
+ 
+ 	int drm_fd; // -1 if unavailable; see open_drm_render_node() in backend.c
++	int gbm_fd; // dup() of drm_fd, owned by gbm_device below
++	struct gbm_device *gbm_device; // NULL until first successful use, or forever if unavailable
++	bool gbm_device_init_attempted; // set on first qnx_screen_backend_ensure_gbm_device() call, success or not
+ 
+ 	struct wl_event_source *screen_source;
+ 	struct wlr_qnx_screen_event_monitor *event_monitor;
+@@ -95,6 +100,13 @@ extern const struct wlr_keyboard_impl qnx_screen_keyboard_impl;
+ extern const struct wlr_pointer_impl qnx_screen_pointer_impl;
+ extern const struct wlr_touch_impl qnx_screen_touch_impl;
+ 
++// Lazily creates (on first call) and returns backend->gbm_device, or NULL if
++// unavailable/failed. Deliberately NOT created eagerly at backend creation
++// time -- see the comment on backend_get_drm_fd() in backend.c for why.
++// Safe to call repeatedly; only actually attempts creation once.
++struct gbm_device *qnx_screen_backend_ensure_gbm_device(
++	struct wlr_qnx_screen_backend *backend);
++
+ bool qnx_screen_output_create_window(struct wlr_qnx_screen_output *output);
+ void qnx_screen_output_destroy_window(struct wlr_qnx_screen_output *output);
+ bool qnx_screen_output_recreate_buffers(struct wlr_qnx_screen_output *output);
+diff --git a/include/render/egl.h b/include/render/egl.h
+index 103ab57d..d09577fd 100644
+--- a/include/render/egl.h
++++ b/include/render/egl.h
+@@ -25,6 +25,7 @@ struct wlr_egl {
+ 		bool EXT_device_query;
+ 		bool KHR_platform_gbm;
+ 		bool EXT_platform_device;
++		bool QNX_platform_screen;
+ 		bool KHR_display_reference;
+ 	} exts;
+ 
+diff --git a/include/wlr/backend/qnx_screen.h b/include/wlr/backend/qnx_screen.h
+index 43e39026..8593b659 100644
+--- a/include/wlr/backend/qnx_screen.h
++++ b/include/wlr/backend/qnx_screen.h
+@@ -83,3 +83,4 @@ bool wlr_qnx_screen_output_set_display(struct wlr_output *output,
+ 	int display_id);
+ 
+ #endif
++
+diff --git a/render/egl.c b/render/egl.c
+index 8673acab..73683638 100644
+--- a/render/egl.c
++++ b/render/egl.c
+@@ -224,6 +224,8 @@ static struct wlr_egl *egl_create(void) {
+ 			"EGL_EXT_platform_device");
+ 	egl->exts.KHR_display_reference = check_egl_ext(client_exts_str,
+ 			"EGL_KHR_display_reference");
++	egl->exts.QNX_platform_screen = check_egl_ext(client_exts_str,
++                        "EGL_QNX_platform_screen");
+ 
+ 	if (check_egl_ext(client_exts_str, "EGL_EXT_device_base") || check_egl_ext(client_exts_str, "EGL_EXT_device_enumeration")) {
+ 		load_egl_proc(&egl->procs.eglQueryDevicesEXT, "eglQueryDevicesEXT");
+@@ -394,9 +396,17 @@ static bool egl_init(struct wlr_egl *egl, EGLenum platform,
+ 	display_attribs[display_attribs_len++] = EGL_NONE;
+ 	assert(display_attribs_len <= sizeof(display_attribs) / sizeof(display_attribs[0]));
+ 
+-	EGLDisplay display = egl->procs.eglGetPlatformDisplayEXT(platform,
+-		remote_display, display_attribs);
++	EGLDisplay display;
++	if (platform == EGL_PLATFORM_SCREEN_QNX) {
++		printf("HERE");
++		display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
++	} else {
++		display = egl->procs.eglGetPlatformDisplayEXT(platform,
++			remote_display, display_attribs);
++	}
+ 	if (display == EGL_NO_DISPLAY) {
++		EGLint error = eglGetError();
++		printf("EGL Error encountered: 0x%04X\n", error);
+ 		wlr_log(WLR_ERROR, "Failed to create EGL display");
+ 		return false;
+ 	}
+@@ -607,6 +617,15 @@ struct wlr_egl *wlr_egl_create_with_drm_fd(int drm_fd) {
+ 		wlr_log(WLR_DEBUG, "KHR_platform_gbm not supported");
+ 	}
+ 
++	//if (egl->exts.QNX_platform_screen) {
++		 if (egl_init(egl, EGL_PLATFORM_SCREEN_QNX, NULL, allow_software)) {
++                        wlr_log(WLR_DEBUG, "Using EGL_PLATFORM_SCREEN_QX");
++                        return egl;
++                }
++	//} else {
++	//	 wlr_log(WLR_DEBUG, "QNX_platform_screen not supported");
++	//}
++
+ error:
+ 	wlr_log(WLR_ERROR, "Failed to initialize EGL context");
+ 	free(egl);
+-- 
+2.51.0
+
+
+From 082606a428d88259b3b99b31eed4b35e45955ee3 Mon Sep 17 00:00:00 2001
+From: Aaron Bassett <abassett@qnx.com>
+Date: Thu, 20 Aug 2026 01:13:51 +0000
+Subject: [PATCH 3/3] full gles support
+
+---
+ include/render/egl.h              |  1 +
+ include/wlr/types/wlr_qnx_redir.h | 39 +++++++++++++++++++
+ protocol/meson.build              |  3 ++
+ protocol/qnx-redir.xml            | 18 +++++++++
+ render/egl.c                      | 41 +++++++++++++++-----
+ tinywl/tinywl.c                   |  8 ++++
+ types/meson.build                 |  1 +
+ types/wlr_qnx_redir.c             | 63 +++++++++++++++++++++++++++++++
+ 8 files changed, 165 insertions(+), 9 deletions(-)
+ create mode 100644 include/wlr/types/wlr_qnx_redir.h
+ create mode 100644 protocol/qnx-redir.xml
+ create mode 100644 types/wlr_qnx_redir.c
+
+diff --git a/include/render/egl.h b/include/render/egl.h
+index d09577fd..aca10eb2 100644
+--- a/include/render/egl.h
++++ b/include/render/egl.h
+@@ -8,6 +8,7 @@ struct wlr_egl {
+ 	EGLContext context;
+ 	EGLDeviceEXT device; // may be EGL_NO_DEVICE_EXT
+ 	struct gbm_device *gbm_device;
++	int fallback_drm_fd;
+ 
+ 	struct {
+ 		// Display extensions
+diff --git a/include/wlr/types/wlr_qnx_redir.h b/include/wlr/types/wlr_qnx_redir.h
+new file mode 100644
+index 00000000..8eada5f7
+--- /dev/null
++++ b/include/wlr/types/wlr_qnx_redir.h
+@@ -0,0 +1,39 @@
++#ifndef WLR_TYPES_WLR_QNX_REDIR_H
++#define WLR_TYPES_WLR_QNX_REDIR_H
++
++#include <wayland-server-core.h>
++
++/*
++ * wl_qnx_redir is a trivial global: as soon as a client binds it, the
++ * compositor sends a single display_id event and the object is otherwise
++ * inert. There is no request in the protocol, so no client -> server
++ * traffic ever needs handling.
++ */
++struct wlr_qnx_redir {
++	struct wl_global *global;
++
++	// The value sent in the display_id event to every client that binds.
++	// Set once at creation time by the caller (see wlr_qnx_redir_create),
++	// which is expected to have gotten it from a backend that actually
++	// knows the native QNX display id (e.g. wlr_qnx_backend_get_display_id).
++	int display_id;
++
++	struct wl_listener display_destroy;
++
++	struct {
++		struct wl_signal destroy;
++	} events;
++
++	void *data;
++};
++
++// Creates the wl_qnx_redir global and advertises it on the display.
++// display_id is the value sent to clients in the display_id event; this
++// type has no way to determine it itself, so the caller must supply it
++// (typically read from a QNX-aware backend at startup).
++// Returns NULL on allocation failure.
++struct wlr_qnx_redir *wlr_qnx_redir_create(struct wl_display *display,
++	int display_id);
++
++#endif
++
+diff --git a/protocol/meson.build b/protocol/meson.build
+index 30aeb68c..1432ab62 100644
+--- a/protocol/meson.build
++++ b/protocol/meson.build
+@@ -77,6 +77,9 @@ protocols = {
+ 	'wlr-output-power-management-unstable-v1': 'wlr-output-power-management-unstable-v1.xml',
+ 	'wlr-screencopy-unstable-v1': 'wlr-screencopy-unstable-v1.xml',
+ 	'wlr-virtual-pointer-unstable-v1': 'wlr-virtual-pointer-unstable-v1.xml',
++
++        # QNX Special
++        'wl-qnx-redir': 'qnx-redir.xml'
+ }
+ 
+ protocols_code = {}
+diff --git a/protocol/qnx-redir.xml b/protocol/qnx-redir.xml
+new file mode 100644
+index 00000000..e40f2db7
+--- /dev/null
++++ b/protocol/qnx-redir.xml
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<protocol name="qnx_redir">
++
++  <!-- QNX support. This object is created by the server and published
++       using the display's global event. -->
++  <interface name="wl_qnx_redir" version="1">
++
++    <!-- Notification of the native display_id used by the server.
++         The client should use this display_id to determine which
++         vendor libraries to load. -->
++    <event name="display_id">
++      <arg name="display_id" type="int"/>
++    </event>
++
++  </interface>
++
++</protocol>
++
+diff --git a/render/egl.c b/render/egl.c
+index 73683638..0a4fa263 100644
+--- a/render/egl.c
++++ b/render/egl.c
+@@ -215,6 +215,8 @@ static struct wlr_egl *egl_create(void) {
+ 		return NULL;
+ 	}
+ 
++	egl->fallback_drm_fd = -1;
++
+ 	load_egl_proc(&egl->procs.eglGetPlatformDisplayEXT,
+ 		"eglGetPlatformDisplayEXT");
+ 
+@@ -619,7 +621,14 @@ struct wlr_egl *wlr_egl_create_with_drm_fd(int drm_fd) {
+ 
+ 	//if (egl->exts.QNX_platform_screen) {
+ 		 if (egl_init(egl, EGL_PLATFORM_SCREEN_QNX, NULL, allow_software)) {
+-                        wlr_log(WLR_DEBUG, "Using EGL_PLATFORM_SCREEN_QX");
++                        wlr_log(WLR_DEBUG, "Using EGL_PLATFORM_SCREEN_QXn");
++			if (drm_fd >= 0) {
++				egl->fallback_drm_fd = fcntl(drm_fd, F_DUPFD_CLOEXEC, 0);
++				if (egl->fallback_drm_fd < 0) {
++					wlr_log_errno(WLR_ERROR,
++						"Failed to dup drm_fd for wlr_egl_dup_drm_fd() fallback");	
++				}
++			}
+                         return egl;
+                 }
+ 	//} else {
+@@ -687,6 +696,10 @@ void wlr_egl_destroy(struct wlr_egl *egl) {
+ 		close(gbm_fd);
+ 	}
+ 
++	if (egl->fallback_drm_fd >= 0) {
++		close(egl->fallback_drm_fd);
++	}
++
+ 	free(egl);
+ }
+ 
+@@ -1063,14 +1076,24 @@ int wlr_egl_dup_drm_fd(struct wlr_egl *egl) {
+ 	}
+ 
+ 	// Fallback to GBM's FD if we can't use EGLDevice
+-	if (egl->gbm_device == NULL) {
+-		return -1;
+-	}
+-
+-	fd = fcntl(gbm_device_get_fd(egl->gbm_device), F_DUPFD_CLOEXEC, 0);
+-	if (fd < 0) {
+-		wlr_log_errno(WLR_ERROR, "Failed to dup GBM FD");
+-	}
++	if (egl->gbm_device != NULL) {
++		fd = fcntl(gbm_device_get_fd(egl->gbm_device), F_DUPFD_CLOEXEC, 0);
++		if (fd < 0) {
++			wlr_log_errno(WLR_ERROR, "Failed to dup GBM FD");
++		}
++		return fd;
++ 	}
++	// Last resort: whatever fd was handed to wlr_egl_create_with_drm_fd(),
++	// for platforms (e.g. EGL_PLATFORM_SCREEN_QNX) whose EGLDisplay doesn't
++	// support EGLDeviceEXT queries and was never bound to a gbm_device in
++	// the first place. See wlr_egl_create_with_drm_fd() above.
++	if (egl->fallback_drm_fd >= 0) {
++		fd = fcntl(egl->fallback_drm_fd, F_DUPFD_CLOEXEC, 0);
++		if (fd < 0) {
++			wlr_log_errno(WLR_ERROR, "Failed to dup fallback DRM fd");
++		}
++		return fd;
++ 	}
+ 	return fd;
+ }
+ 
+diff --git a/tinywl/tinywl.c b/tinywl/tinywl.c
+index fe242e1a..139f2991 100644
+--- a/tinywl/tinywl.c
++++ b/tinywl/tinywl.c
+@@ -22,6 +22,7 @@
+ #include <wlr/types/wlr_subcompositor.h>
+ #include <wlr/types/wlr_xcursor_manager.h>
+ #include <wlr/types/wlr_xdg_shell.h>
++#include <wlr/types/wlr_qnx_redir.h>
+ #include <wlr/util/log.h>
+ #include <xkbcommon/xkbcommon.h>
+ 
+@@ -982,6 +983,13 @@ int main(int argc, char *argv[]) {
+ 	server.new_xdg_popup.notify = server_new_xdg_popup;
+ 	wl_signal_add(&server.xdg_shell->events.new_popup, &server.new_xdg_popup);
+ 
++	struct wlr_qnx_redir *qnx_redir =
++		wlr_qnx_redir_create(server.wl_display, 1);
++	if (qnx_redir == NULL) {
++		wlr_log(WLR_ERROR, "Failed to create wl_qnx_redir global");
++		return 1;
++	}
++
+ 	/*
+ 	 * Creates a cursor, which is a wlroots utility for tracking the cursor
+ 	 * image shown on screen.
+diff --git a/types/meson.build b/types/meson.build
+index 26958f04..d4994bb4 100644
+--- a/types/meson.build
++++ b/types/meson.build
+@@ -107,6 +107,7 @@ wlr_files += files(
+ 	'wlr_xdg_system_bell_v1.c',
+ 	'wlr_xdg_toplevel_icon_v1.c',
+ 	'wlr_xdg_toplevel_tag_v1.c',
++        'wlr_qnx_redir.c',
+ )
+ 
+ if features.get('drm-backend')
+diff --git a/types/wlr_qnx_redir.c b/types/wlr_qnx_redir.c
+new file mode 100644
+index 00000000..05fe6109
+--- /dev/null
++++ b/types/wlr_qnx_redir.c
+@@ -0,0 +1,63 @@
++#include <assert.h>
++#include <stdlib.h>
++#include <wlr/types/wlr_qnx_redir.h>
++#include <wlr/util/log.h>
++#include "qnx-redir-protocol.h"
++
++#define QNX_REDIR_VERSION 1
++
++static void qnx_redir_bind(struct wl_client *client, void *data,
++		uint32_t version, uint32_t id) {
++	struct wlr_qnx_redir *qnx_redir = data;
++
++	struct wl_resource *resource = wl_resource_create(client,
++		&wl_qnx_redir_interface, version, id);
++	if (resource == NULL) {
++		wl_client_post_no_memory(client);
++		return;
++	}
++
++	// No requests in this interface, so no implementation/destructor needed
++	// beyond the default.
++	wl_resource_set_implementation(resource, NULL, NULL, NULL);
++
++	// The whole point of this global: tell the client which display_id to
++	// use, right away, since there's nothing else for this object to do.
++	wl_qnx_redir_send_display_id(resource, qnx_redir->display_id);
++}
++
++static void handle_display_destroy(struct wl_listener *listener, void *data) {
++	struct wlr_qnx_redir *qnx_redir =
++		wl_container_of(listener, qnx_redir, display_destroy);
++
++	wl_signal_emit_mutable(&qnx_redir->events.destroy, qnx_redir);
++
++	wl_list_remove(&qnx_redir->display_destroy.link);
++	wl_global_destroy(qnx_redir->global);
++	free(qnx_redir);
++}
++
++struct wlr_qnx_redir *wlr_qnx_redir_create(struct wl_display *display,
++		int display_id) {
++	struct wlr_qnx_redir *qnx_redir = calloc(1, sizeof(*qnx_redir));
++	if (qnx_redir == NULL) {
++		return NULL;
++	}
++
++	qnx_redir->global = wl_global_create(display, &wl_qnx_redir_interface,
++		QNX_REDIR_VERSION, qnx_redir, qnx_redir_bind);
++	if (qnx_redir->global == NULL) {
++		free(qnx_redir);
++		return NULL;
++	}
++
++	qnx_redir->display_id = display_id;
++
++	wl_signal_init(&qnx_redir->events.destroy);
++
++	qnx_redir->display_destroy.notify = handle_display_destroy;
++	wl_display_add_destroy_listener(display, &qnx_redir->display_destroy);
++
++	return qnx_redir;
++}
++
+-- 
+2.51.0
+
