@@ -1,0 +1,73 @@
+# Alpine-Contributor: Adrian Siekierka <kontakt@asie.pl>
+# Apline-Maintainer: Thomas Kienlen <kommander@laposte.net>
+# Maintainer: abdulahmoda <abahmoda@qnx.com>
+pkgname=openttd
+pkgver=15.2
+pkgrel=0
+pkgdesc="Open source version of the Transport Tycoon Deluxe simulator"
+url="https://www.openttd.org"
+arch="all"
+license="GPL-2.0-or-later"
+depends="
+	libcurl
+	harfbuzz
+	libpng
+	lzo
+	sdl2-compat
+	sdl2-compat-static
+	"
+makedepends="
+	cmake
+	ninja
+	sdl2-compat-dev
+	curl-dev
+	fontconfig-dev
+	harfbuzz-dev
+	icu-dev
+	libpng-dev
+	xz-dev
+	zlib-dev
+	qnx-io-sock-dev
+	libc++-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang::noarch"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/qnx-ports/OpenTTD/archive/refs/tags/15.2.tar.gz
+	"
+builddir="$srcdir/OpenTTD-$pkgver"
+
+build() {
+	CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=0" \
+	CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=0" \
+	cmake -B build \
+		-G Ninja \
+		-DCMAKE_INSTALL_BINDIR=bin \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_DATADIR=share/games \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS -Wl,-z,stack-size=1048576" \
+		-DQNX=803
+	cmake --build build
+}
+
+check() {
+	cmake --build build --target openttd_test
+	./build/openttd_test
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	pkgdesc="$pkgdesc (localizations)"
+
+	cd "$pkgdir"
+	mkdir -p "$subpkgdir"/usr/share/games/openttd/lang
+	find usr/share/games/openttd/lang/ ! -name 'english.lng' -type f \
+		-exec mv {} "$subpkgdir"/{} \;
+}
+
+sha512sums="
+877cb818a41a0fab3adc1fe0e59a32f994d645081c98d2a90c452baed99652be2aaf131e775978c1622b77bcb10ceebba080bf1c1e6b47be7eacddb4fd97608a  openttd-15.2.tar.gz
+"
