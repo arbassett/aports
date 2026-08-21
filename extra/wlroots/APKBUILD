@@ -23,6 +23,8 @@ makedepends="
 	qnx-libgbm-dev
 	qnx-io-sock-dev
 	qnx-fd-notify-dev
+	egl-headers
+	gles-headers
 	"
 # wlroots >= 0.18.0 does no longer ship a libwlroots.so symlink in the -dev
 # subpackage. Hence, abuild's dependency tracing fails to identify that the
