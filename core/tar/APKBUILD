@@ -1,6 +1,7 @@
+# Maintainer: Aaron Bassett <abassett@qnx.com>
 pkgname=tar
 pkgver=1.35
-pkgrel=0
+pkgrel=1
 pkgdesc="Utility used to store, backup, and transport files"
 url="https://www.gnu.org/software/tar/"
 arch="all"
@@ -12,6 +13,7 @@ subpackages="$pkgname-doc"
 source="https://mirror.csclub.uwaterloo.ca/gnu/tar/tar-$pkgver.tar.xz
         dir_open.patch
 	fix-qnx-makedev.patch
+	ignore-apk-tools-checksums.patch
         "
 
 build() {
@@ -38,4 +40,5 @@ sha512sums="
 8b84ed661e6c878fa33eb5c1808d20351e6f40551ac63f96014fb0d0b9c72d5d94d8865d39e36bcb184fd250f84778a3b271bbd8bd2ceb69eece0c3568577510  tar-1.35.tar.xz
 c3f70e9b6aa4e6a360e5051f114b765d67104c7a3ee0eeadbb45568c245ab257488e045e586cee93102461af6d5a4aa72d210e40e4a94e51bd366f86de83c2fd  dir_open.patch
 bd35647d600b0f949faf57209ab4bcc73f4f2a97c6389fadacc73d33be212fcd7fd822df3d08f02871808bb6792bff705ad3712917d66d56ebd3d0c990d5301c  fix-qnx-makedev.patch
+e60c479c41e8f9bdfbc933857e26b3b7844fb04021a7d4a9cbd7fb44cc2acac98ea109a41dca38bff9b388eac8e17348310e42eb3c70fe5594d83ee0aca27102  ignore-apk-tools-checksums.patch
 "
