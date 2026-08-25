@@ -1,9 +1,8 @@
 # Alpine-Maintainer: Krassy Boykinov <kboykinov@teamcentrixx.com>
-# Maintainer: Felix Xing <fxing@qnx.com>
-
+# Maintainer: Aaron Bassett <abassett@qnx.com>
 pkgname=gst-plugins-base
 pkgver=1.26.8
-pkgrel=0
+pkgrel=1
 pkgdesc="GStreamer streaming media framework base plug-ins"
 url="https://gstreamer.freedesktop.org"
 arch="all"
@@ -61,7 +60,7 @@ build() {
     CXX=clang++ \
     CFLAGS="$CFLAGS -O2 -DNDEBUG" \
     CXXFLAGS="$CXXFLAGS -O2 -DNDEBUG" \
-    CPPFLAGS="$CPPFLAGS -O2 -DNDEBUG" \
+    CPPFLAGS="$CPPFLAGS -O2 -DNDEBUG -Wno-error=incompatible-function-pointer-types" \
     abuild-meson \
         -Db_lto=false \
         -Dalsa=enabled \
