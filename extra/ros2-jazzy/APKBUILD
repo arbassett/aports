@@ -2,12 +2,12 @@
 # Maintainer: Felix Lionardo <flionardo@qnx.com>
 pkgname=ros2-jazzy
 pkgver=20260128
-pkgrel=0
+pkgrel=1
 pkgdesc="ROS 2 Jazzy desktop package"
 url="https://docs.ros.org/en/jazzy/index.html"
 arch="aarch64 x86_64"
 license="Apache-2.0"
-options="!check !tracedeps !fhs"
+options="!check !tracedeps !fhs net"
 
 source="
     ament_cmake.tar.gz::https://github.com/ament/ament_cmake/archive/refs/tags/2.5.5.tar.gz
@@ -255,6 +255,7 @@ makedepends="
         cmake
         ninja
         vcstool
+        ca-certificates
 "
 
 prepare() {
@@ -287,8 +288,8 @@ build() {
 			-G Ninja \
 			-DBUILD_TESTING=OFF \
 			-DCMAKE_BUILD_TYPE=Release \
-			-DCMAKE_C_FLAGS="$CFLAGS -fvisibility=default -frtti -DSA_RESTART=0 -Wno-error=deprecated-literal-operator -Wno-error=old-style-cast" \
-			-DCMAKE_CXX_FLAGS="$CXXFLAGS -fvisibility=default -frtti -DSA_RESTART=0 -Wno-error=deprecated-literal-operator -Wno-error=old-style-cast" \
+			-DCMAKE_C_FLAGS="$CFLAGS -fvisibility=default -frtti -DSA_RESTART=0 -Wno-error=deprecated-literal-operator -Wno-error=old-style-cast -Wno-error=c2y-extensions" \
+			-DCMAKE_CXX_FLAGS="$CXXFLAGS -fvisibility=default -frtti -DSA_RESTART=0 -Wno-error=deprecated-literal-operator -Wno-error=old-style-cast -Wno-error=c2y-extensions" \
 			-DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
 			-DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
 			-DTRACETOOLS_TRACEPOINTS_EXCLUDED=ON \
@@ -308,6 +309,9 @@ package() {
         for _f in  COLCON_IGNORE .colcon_install_layout _local_setup_util_ps1.py local_setup.ps1 setup.ps1; do
             [[ -f "$pkgdir"/$dest/$_f ]] && rm "$pkgdir"/$dest/$_f
         done
+
+        sed -i "s|$builddir/install|$dest|g" "$pkgdir/$dest/setup.sh"
+        sed -i "s|$builddir/install|$dest|g" "$pkgdir/$dest/local_setup.sh"
 }
 
 sha512sums="
