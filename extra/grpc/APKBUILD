@@ -1,0 +1,227 @@
+# Alpine-Contributor: Keith Maxwell <keith.maxwell@gmail.com>
+# Alpine-Contributor: wener <wenermail@gmail.com>
+# Alpine-Maintainer: wener <wenermail@gmail.com>
+# Maintainer: Ethan Leir <eleir@qnx.com>
+pkgname=grpc
+pkgver=1.76.0
+pkgrel=0
+pkgdesc="The C based gRPC"
+url="https://grpc.io/"
+arch="all"
+# BSD-3-Clause: third_party/upb, third_party/address_sorting
+# MIT: third_party/upb/third_party/utf8_range
+license="Apache-2.0 AND BSD-3-Clause AND MIT"
+depends="ca-certificates"
+depends_dev="
+    $pkgname-cpp=$pkgver-r$pkgrel
+    $pkgname-plugins=$pkgver-r$pkgrel
+    abseil-cpp-dev libc++-dev protobuf-dev c-ares-dev openssl-dev>3 re2-dev
+    zlib-ng-dev
+    "
+makedepends="abseil-cpp-dev autoconf automake bash benchmark-dev c-ares-dev
+    clang chrpath cmake libc++-dev clang libtool openssl-dev>3 protobuf-dev
+    re2-dev ninja yaml-dev xxhash-dev zlib-ng-dev qnx-io-sock-dev
+    "
+checkdepends="coreutils python3 python3-six"
+_libgpr_depends="abseil-cpp libc++"
+_libgrpc_depends="libaddress_sorting libgpr libupb_base_lib libupb_hash_lib
+libupb_json_lib libupb_mem_lib libupb_message_lib libupb_reflection_lib
+libupb_textformat_lib libupb_wire_lib abseil-cpp c-ares libc++ libcrypto libssl3
+qnx-io-sock re2 zlib-ng"
+_libgrpc_authorization_provider_depends="libaddress_sorting libgpr libupb_mem_lib
+libupb_message_lib libupb_reflection_lib libupb_textformat_lib libupb_wire_lib
+abseil-cpp c-ares libc++ qnx-io-sock re2 zlib-ng"
+_libgrpc_unsecure_depends="libaddress_sorting libgpr libupb_mem_lib
+libupb_message_lib libupb_reflection_lib libupb_textformat_lib libupb_wire_lib
+abseil-cpp c-ares libc++ qnx-io-sock zlib-ng"
+_libupb_json_lib_depends="libupb_base_lib libupb_lex_lib libupb_mem_lib
+libupb_message_lib libupb_reflection_lib libupb_wire_lib"
+_libupb_message_lib_depends="libupb_hash_lib libupb_mem_lib libupb_mini_table_lib"
+_libupb_mini_table_lib_depends="libupb_hash_lib libupb_mem_lib"
+_libupb_mini_descriptor_lib_depends="libupb_base_lib libupb_mem_lib
+libupb_mini_table_lib"
+_libupb_reflection_lib_depends="libupb_base_lib libupb_hash_lib libupb_mem_lib
+libupb_message_lib libupb_mini_descriptor_lib libupb_mini_table_lib
+libupb_wire_lib"
+_libupb_textformat_lib_depends="libupb_lex_lib libupb_mem_lib libupb_message_lib
+libupb_reflection_lib libupb_wire_lib libutf8_range_lib"
+_libupb_wire_lib_depends="libupb_hash_lib libupb_mem_lib libupb_message_lib
+libupb_mini_table_lib libutf8_range_lib"
+subpackages="
+    $pkgname-dev
+    $pkgname-cpp
+    $pkgname-plugins
+    $pkgname-doc
+    libaddress_sorting:lib
+    libgpr:lib
+    libgrpc:lib
+    libgrpc_authorization_provider:lib
+    libgrpc_unsecure:lib
+    libupb_base_lib:lib
+    libupb_hash_lib:lib
+    libupb_json_lib:lib
+    libupb_lex_lib:lib
+    libupb_mem_lib:lib
+    libupb_message_lib:lib
+    libupb_mini_descriptor_lib:lib
+    libupb_mini_table_lib:lib
+    libupb_reflection_lib:lib
+    libupb_textformat_lib:lib
+    libupb_wire_lib:lib
+    libutf8_range_lib:lib
+    "
+_googletest_rev=52204f78f94d7512df1f0f3bea1d47437a2c3a58
+
+_git_rev=0
+source="$pkgname-$pkgver-r$_git_rev.tar.gz::https://github.com/qnx-ports/grpc/archive/refs/tags/qnx-v$pkgver-r$_git_rev.tar.gz
+    googletest-$_googletest_rev.tar.gz::https://github.com/google/googletest/archive/$_googletest_rev.tar.gz
+    "
+options="net !check" # sometimes hang indefinitely on builders
+
+builddir="$srcdir/$pkgname-qnx-v$pkgver-r$_git_rev"
+
+prepare() {
+    rm -r third_party/googletest
+    mv "$srcdir"/googletest-$_googletest_rev third_party/googletest
+
+    # Remove bundled xxhash.
+    # Since grpc sets XXH_INCLUDE_ALL wherever it uses xxhash, it is using xxhash
+    # as a header-only library. This means we can replace it with the system copy
+    # by doing nothing further; xxhash.h is in the system include path and will be
+    # found instead, and there are no linker flags to add. See also
+    # https://github.com/grpc/grpc/issues/25945.
+    rm -rvf third_party/xxhash/*
+
+    # This will be replaced with a symlink to system certs.
+    echo '' > etc/roots.pem
+
+    default_prepare
+
+    # Remove some bundled dependencies from the gem's files list.
+    sed -i \
+        -e '/etc\/roots.pem/d' \
+        -e '/third_party\/abseil/d' \
+        -e '/third_party\/boringssl/d' \
+        -e '/third_party\/cares/d' \
+        -e '/third_party\/re2/d' \
+        -e '/third_party\/xxhash/d' \
+        -e '/third_party\/zlib/d' \
+        grpc.gemspec
+
+    # Remove unused dependency from gemspec - it's not required anyhwere,
+    # it's just Google pushing their crap everywhere...
+    sed -i '/add_dependency.*googleapis-common-protos-types/d' \
+        grpc.gemspec
+
+    # use system protobuf for grpcio_tools
+    sed -r -i \
+        -e '/^CC_FILES=\[/,/\]/{/^CC_FILES=\[/n;/\]/!d;}' \
+        -e '/^CC_INCLUDES=\[/,/\]/{/^CC_INCLUDES=\[/n;/\]/!d;}' \
+        -e "s@^(PROTO_INCLUDE=')[^']+'@\1/usr/include'@" \
+        -e '/^PROTOBUF_SUBMODULE_VERSION=/d' \
+        tools/distrib/python/grpcio_tools/protoc_lib_deps.py
+    ln -s ../../../.. tools/distrib/python/grpcio_tools/grpc_root
+}
+
+build() {
+    export CC=clang
+    export CXX=clang++
+    export CXXFLAGS="$CXXFLAGS -DNDEBUG -O2 -DGRPC_ENABLE_FORK_SUPPORT=1 -DGRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK=1"
+    export LDFLAGS="$LDFLAGS -lsocket"
+    cmake -B _build -G Ninja \
+        -DCMAKE_BUILD_TYPE=None \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DBUILD_SHARED_LIBS=True \
+        -DgRPC_INSTALL=ON \
+        -DgRPC_CARES_PROVIDER=package \
+        -DgRPC_PROTOBUF_PROVIDER=package \
+        -DgRPC_SSL_PROVIDER=package \
+        -DgRPC_ZLIB_PROVIDER=package \
+        -DgRPC_ABSL_PROVIDER=package \
+        -DgRPC_BENCHMARK_PROVIDER=package \
+        -DgRPC_RE2_PROVIDER=package \
+        -DgRPC_USE_SYSTEMD=OFF \
+        -DgRPC_BUILD_TESTS="$(want_check && echo ON || echo OFF)"
+    cmake --build _build
+}
+
+check() {
+    # delete times out in ci or broken for ci tests
+    rm -f _build/spinlock_test _build/resolve_address_using_ares_resolver_posix_test build/resolve_address_using_native_resolver_posix_test
+    rm -f _build/flaky_network_test _build/unknown_frame_bad_client_test _build/ssl_transport_security_test _build/httpscli_test
+    rm -f _build/headers_bad_client_test _build/httpcli_test
+    case $CARCH in
+        aarch64|ppc64le) rm -f _build/server_test _build/grpc_tool_test ;;
+        s390x) rm -f _build/client_lb_end2end_test _build/alts_frame_protector_test _build/alts_iovec_record_protocol_test ;;
+        armv7) rm -f _build/initial_settings_frame_bad_client_test ;;
+        x86) rm -f _build/time_jump_test _build/connection_prefix_bad_client_test ;;
+    esac
+
+    # start helper
+    ./tools/run_tests/start_port_server.py &
+    find build/ -maxdepth 1 -type f -executable -name "*_test" -exec {} \;
+    # kill helper
+    pkill -9 python3
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install _build
+    # python3 -m installer -d "$pkgdir" .dist/*.whl
+    # python3 -m installer -d "$pkgdir" tools/distrib/python/grpcio_tools/.dist/*.whl
+
+    cd doc
+    find ./ -type f -print -exec install -Dm644 {} "$pkgdir"/usr/share/doc/grpc/{} \;
+    rm -f "$pkgdir"/usr/share/doc/grpc/.gitignore
+
+    find "$pkgdir" -type f -name roots.pem -exec \
+        sh -c 'rm $0 && ln -s /etc/ssl/certs/ca-certificates.crt $0' "{}" \;
+}
+
+cpp() {
+    pkgdesc="C++ language bindings for gRPC"
+    depends="$pkgname=$pkgver-r$pkgrel libc++ libgpr libupb_hash_lib
+        libupb_mem_lib libupb_message_lib libupb_wire_lib libgrpc libgrpc_unsecure
+        abseil-cpp libprotobuf libprotoc"
+
+    amove usr/lib/libgrpc++*.so.*
+    amove usr/lib/libgrpc_plugin_support.so.*
+    amove usr/lib/libgrpcpp*.so.*
+}
+
+plugins() {
+    pkgdesc="Protocol buffers compiler plugins for gRPC"
+    depends="$pkgname-cpp=$pkgver-r$pkgrel protobuf abseil-cpp-hash
+        abseil-cpp-raw-hash-set libc++ libprotobuf libprotoc"
+
+    amove usr/bin/grpc_*_plugin
+}
+
+cli() {
+    pkgdesc="gRPC command line tool"
+
+    install -Dm644 -t "$subpkgdir"/usr/lib "$builddir"/_build/libgrpc++_test_config.so.$pkgver
+    install -Dm755 -t "$subpkgdir"/usr/bin "$builddir"/_build/grpc_cli
+
+    # Fix "Has /home/... in rpath"
+    chrpath -d "$subpkgdir"/usr/lib/libgrpc++_test_config.so.$pkgver
+    chrpath -d "$subpkgdir"/usr/bin/grpc_cli
+}
+
+lib() {
+    pkgdesc="$pkgdesc ($subpkgname library)"
+    depends="$pkgname=$pkgver-r$pkgrel $(getvar "_${subpkgname}_depends")"
+
+    amove usr/lib/$subpkgname.so.*
+}
+
+# Print value of the specified variable, or the default if empty or not defined.
+# From https://github.com/alpinelinux/aports/blob/3d4f2edabc7cca3a16b88a2d3795f584ae40aff5/main/nginx/APKBUILD
+getvar() {
+	eval "printf '%s\n' \"\${$1:-$2}\""
+}
+
+sha512sums="
+9302226c519903907986c5aa53aef6ab34956683a43984079204af1b45ffc6af270f5da9c681c171fd24f4f9fb48225fffe76e27c67a8bb8c4d0a2926ab53a8a  grpc-1.76.0-r0.tar.gz
+a24d71b1f0a4a54e98da9b1fab80a4402f0dff508bc901bf75976ccc3fbe9fb4a022e5be91b96619bec27ddfb047ff44ff4b5b1c42bb7c79e2b1c48c18fd7436  googletest-52204f78f94d7512df1f0f3bea1d47437a2c3a58.tar.gz
+"
