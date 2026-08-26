@@ -1,0 +1,17 @@
+diff --git a/src/libssh2_setup.h b/src/libssh2_setup.h
+index 0f17a188..7e69201e 100644
+--- a/src/libssh2_setup.h
++++ b/src/libssh2_setup.h
+@@ -14,6 +14,12 @@
+ #include <_mingw.h>
+ #endif
+ 
++/* Include <sys/time.h> explicitly to resolve
++ * missing type or function when compiling on QNX Neutrino RTOS environments */
++#ifdef __QNX__
++#include <sys/time.h>
++#endif
++
+ /* Configuration provided by build tools (autotools and CMake),
+    and via platform-specific directories for os400 and vms */
+ #if defined(HAVE_CONFIG_H) || defined(__OS400__) || defined(__VMS)

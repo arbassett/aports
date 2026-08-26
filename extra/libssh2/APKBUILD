@@ -1,0 +1,55 @@
+# Alpine-Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Narayana Murthy <nnarayanamurthy@qnx.com>
+pkgname=libssh2
+pkgver=1.11.1
+pkgrel=0
+pkgdesc="library for accessing ssh1/ssh2 protocol servers"
+url="https://libssh2.org/"
+arch="all"
+options="!check"
+license="BSD-3-Clause"
+depends="qnx-io-sock zlib-ng libssl3 libcrypto3"
+makedepends_host="openssl-dev>3 zlib-ng-dev qnx-io-sock-dev"
+checkdepends="bash"
+subpackages="$pkgname-dbg $pkgname-static $pkgname-dev $pkgname-doc"
+source="https://www.libssh2.org/download/$pkgname-$pkgver.tar.gz
+	0001-Add-QNX-Support.patch
+    CVE-2026-55199.patch
+    CVE-2026-55200.patch
+    CVE-2026-7598.patch
+    0002-tap-driver-qnx-avoid-cat-fd3.patch
+	"
+
+build() {
+    ./configure \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --mandir=/usr/share/man \
+        --infodir=/usr/share/info \
+        --localstatedir=/var \
+        --with-crypto=openssl \
+        --with-libssl-prefix=$CBUILDROOT/ \
+        --disable-docker-tests \
+        --disable-rpath \
+        --disable-examples-build
+    make
+}
+
+check() {
+	# with --disable-docker-tests above only mansyntax.sh and test_simple are
+	# run, other tests require docker and a running sshd
+    make check VERBOSE=1
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+8703636fc28f0b12c8171712f3d605e0466a5bb9ba06e136c3203548fc3408ab07defd71dc801d7009a337e1e02fd60e8933a2a526d5ef0ce53153058d201233  libssh2-1.11.1.tar.gz
+60bda3a2bca31872b21ad8a2ee29f06e00b778987beaeccf949177f86005e7151dcd053c893de77dc79a800b91abde8b8859c3916625b15751064dbda9029210  0001-Add-QNX-Support.patch
+3e3f932de2caa28ff5f6bc01a379a23d511f8411c9c5a0e880a83eb89da35ee78ffe5feac5bf8067fdd3ccb390deb31608e28be77854e3eec379183b25030260  CVE-2026-55199.patch
+2e3b5891f51ab4dc9874793289fa2136c6188bb0a6208116309227ff66fdbefd466c4bfb5e4e88db4b44eca2fcf81e82a22c5c36158bc859251baaff64278236  CVE-2026-55200.patch
+860d241663faebb4e25ba934bb063cae2b64994674f15adc136a802d81aa4d4089b8e5c8cb93dfd21098b81200e8cfdef579f8caa1346754aacfa6f690da4f5b  CVE-2026-7598.patch
+6f3a48244ed79bb2f4ea49f4c3ad1440f667189222b8bc6c7f75f49f529dfcd8257fc673a494892527b9f17f66997d768aa50a3436552ef7a124a17416cb5db9  0002-tap-driver-qnx-avoid-cat-fd3.patch
+"
