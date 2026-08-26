@@ -17,7 +17,6 @@ subpackages="
     $pkgname-bash-completion
     $pkgname-prompt::noarch
     perl-$pkgname:_perl_git:noarch
-    $pkgname-svn::noarch
     $pkgname-perl:_git_perl:noarch
     $pkgname-doc
     "
@@ -36,10 +35,10 @@ NO_GETTEXT=YesPlease
 NO_SVN_TESTS=YesPlease
 NO_REGEX=YesPlease
 NO_SYS_POLL_H=1
-NEED_LIBICONV=Yes
+NEEDS_LIBICONV=Yes
 INSTALL_SYMLINKS=1
 CFLAGS=$CFLAGS -D_QNX_SOURCE
-LDFLAGS=$LDFLAGS -shared-libgcc -lregex -liconv
+LDFLAGS=$LDFLAGS -shared-libgcc -lregex 
 USE_LIBPCRE2=YesPlease
 PYTHON_PATH=/usr/bin/python3
     " > config.mak
@@ -73,20 +72,10 @@ package() {
         "$pkgdir"/usr/share/bash-completion/completions/git
     install -Dm644 contrib/completion/git-prompt.sh \
         "$pkgdir"/usr/share/git-core/git-prompt.sh
+
+    rm "$pkgdir/$_gitcoredir"/git-svn
 }
 
-
-svn() {
-    pkgdesc="Subversion support for git"
-    depends="
-        perl
-        perl-git-svn=$pkgver-r$pkgrel
-        perl-subversion
-        perl-term-readkey
-        "
-
-    amove $_gitcoredir/git-svn
-}
 
 _perl_git() {
     pkgdesc="Perl interface to Git"
