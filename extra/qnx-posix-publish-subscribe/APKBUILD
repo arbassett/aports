@@ -1,0 +1,70 @@
+# Maintainer: Terence Ang <taang@qnx.com>
+pkgname="qnx-posix-publish-subscribe"
+pkgver=1.1.0
+pkgrel=0
+pkgdesc="QNX POSIX PubSub Service"
+_dbg_pkgdesc="debug symbols and binaries"
+_samples_pkgdesc="samples"
+_utils_pkgdesc="utilities"
+url="https://qnx.com"
+arch="all"
+license="Apache-2.0"
+depends="qnx-libslog2 qnx-libjson"
+makedepends="
+    qnx-io-sock-dev
+    qnx-libslog2-dev
+    qnx-slogger2-dev
+    qnx-libjson-dev
+    meson
+"
+options="!strip !check"
+subpackages="
+    $pkgname-dbg:dbg
+    $pkgname-utils:utils
+    $pkgname-samples:samples
+"
+source="
+    $pkgname-$pkgver.tar.gz::https://github.com/qnx/qnx-posix-publish-subscribe/archive/refs/tags/v$pkgver.tar.gz
+"
+
+build() {
+    meson setup output --prefix=/usr
+    meson compile -C output
+}
+
+package() {
+    DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+dbg() {
+    default_dbg
+    pkgdesc="$pkgname $_dbg_pkgdesc"
+    depends="
+        $pkgname=$pkgver-r$pkgrel
+        $pkgname-utils=$pkgver-r$pkgrel
+        $pkgname-samples=$pkgver-r$pkgrel
+    "
+}
+
+utils() {
+    pkgdesc="$pkgname $_utils_pkgdesc"
+    depends="qnx-libslog2 qnx-libjson qnx-io-sock"
+    amove usr/bin/echo-actuator
+    amove usr/bin/playback-connector
+    amove usr/bin/playback-recorder
+    amove usr/bin/playback-tool
+}
+
+samples() {
+    pkgdesc="$pkgname $_samples_pkgdesc"
+    amove usr/bin/sample-message-publisher
+    amove usr/bin/sample-message-subscriber
+    amove usr/bin/sample-signal-consumer
+    amove usr/bin/sample-signal-publisher
+    amove etc/signal_framework/playback-connector.json
+    amove etc/signal_framework/playback-recorder.json
+    amove etc/signal_framework/sample-playback.jsonl
+    amove etc/signal_framework/echo-actuator.json
+}
+
+sha512sums="59caa963efeaf720aa95e4d8f9125eef956b7d7417b5e8a0fb56991f320206c22bbee04a8037951b183f6be087e07f1a557bb976a3af5c644ba37584595c24d7  qnx-posix-publish-subscribe-1.1.0.tar.gz"
