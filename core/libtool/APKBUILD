@@ -1,7 +1,7 @@
 # This can only be compiled natively on QNX
 pkgname=libtool
 pkgver=2.5.4
-pkgrel=2
+pkgrel=3
 pkgdesc="A generic library support script"
 url="https://www.gnu.org/software/libtool"
 arch="all"
